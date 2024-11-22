@@ -1221,56 +1221,66 @@ document.getElementById("user-input").addEventListener("keydown", function (even
 
 // Keyword-based responses
 const keywordResponses = {
-    "the university": "Welcome to Universidad Maria Auxiliadora! We strive to provide a quality educational experience to all our students.",
-    "quality management": "We are committed to Quality Management in all aspects of our institution.",
-    "teachers": "Our teachers are experts in their fields and dedicated to your success.",
-    "campuses": "We have modern campuses with state-of-the-art facilities to support your education.",
-    "social responsibility": "We actively participate in social responsibility initiatives to support our community.",
-    "covid": "Our actions against COVID-19 include strict safety protocols and support for the community.",
-    "transparency portal": "Visit our Transparency Portal to explore our initiatives and regulations: [Link]",
-    "regulations": "You can find our Regulations and Resolutions in the institutional repository.",
-    "repository-institutional": "Our Institutional Repository contains a wealth of academic resources for you to explore.",
-    "i said uma": "I SAID UMA is our slogan to inspire and motivate our students and staff.",
-    "scientific publications": "Explore our scientific publications to stay updated on the latest research.",
+    "the university": "🏫 Welcome to Universidad Maria Auxiliadora! We strive to provide a quality educational experience to all our students. 🌟",
+    "quality management": "✅ We are committed to Quality Management in all aspects of our institution. 📋",
+    "teachers": "👩‍🏫 Our teachers are experts in their fields and dedicated to your success. 💡",
+    "campuses": "🏢 We have modern campuses with state-of-the-art facilities to support your education. 🌐",
+    "social responsibility": "🌍 We actively participate in social responsibility initiatives to support our community. 🤝",
+    "covid": "😷 Our actions against COVID-19 include strict safety protocols and support for the community. 🛡️",
+    "transparency portal": "🔍 Visit our Transparency Portal to explore our initiatives and regulations: [Link]. 🌐",
+    "regulations": "📜 You can find our Regulations and Resolutions in the institutional repository. 📘",
+    "repository-institutional": "📚 Our Institutional Repository contains a wealth of academic resources for you to explore. 🌟",
+    "i said uma": "🎓 I SAID UMA is our slogan to inspire and motivate our students and staff. 💪",
+    "scientific publications": "📖 Explore our scientific publications to stay updated on the latest research. 🔬",
 
     // Undergraduate Programs
-    "artificial intelligence": "Our Artificial Intelligence Engineering program prepares you for the future of technology.",
-    "business": "Our International Business and Administration program gives you the tools to thrive in global markets.",
-    "administration and marketing": "Learn the art of managing and marketing with our Administration and Marketing program.",
-    "accounting and finance": "Our Accounting and Finance program develops your financial expertise.",
-    "pharmacy and biochemistry": "Discover the science behind health in our Pharmacy and Biochemistry program.",
-    "infirmary": "Train to be a healthcare professional in our Infirmary program.",
-    "nutrition": "Our Nutrition and Dietetics program focuses on health and well-being.",
-    "psychology": "Understand the human mind and behavior in our Psychology program.",
-    "medical technology": "Our Medical Technology programs specialize in clinical laboratory, pathological anatomy, physical therapy, and rehabilitation.",
+    "artificial intelligence": "🤖 Our Artificial Intelligence Engineering program prepares you for the future of technology. 🚀",
+    "business": "🌍 Our International Business and Administration program gives you the tools to thrive in global markets. 📈",
+    "administration and marketing": "📊 Learn the art of managing and marketing with our Administration and Marketing program. 💼",
+    "accounting and finance": "💰 Our Accounting and Finance program develops your financial expertise. 📊",
+    "pharmacy and biochemistry": "⚗️ Discover the science behind health in our Pharmacy and Biochemistry program. 🧪",
+    "infirmary": "🩺 Train to be a healthcare professional in our Infirmary program. 💙",
+    "nutrition": "🥗 Our Nutrition and Dietetics program focuses on health and well-being. 🏋️",
+    "psychology": "🧠 Understand the human mind and behavior in our Psychology program. 💭",
+    "medical technology": "🩺 Our Medical Technology programs specialize in clinical laboratory, pathological anatomy, physical therapy, and rehabilitation. 👨‍🔬",
 
     // Graduate Programs
-    "mastery": "Advance your career with our Master's programs.",
-    "specialization": "Our Second Specialization Professional programs offer advanced expertise in various fields.",
-    "graduates": "We offer extensive support and resources for our graduates.",
-    "continuing education": "Our Continuing Education programs are designed to help you grow professionally.",
+    "mastery": "🎓 Advance your career with our Master's programs. 📘",
+    "specialization": "📚 Our Second Specialization Professional programs offer advanced expertise in various fields. 🏆",
+    "graduates": "🎓 We offer extensive support and resources for our graduates. 🎉",
+    "continuing education": "📖 Our Continuing Education programs are designed to help you grow professionally. 🚀",
 
     // Admission
-    "admission": "Explore our admission process and find the right path for you.",
-    "high school": "If you've finished high school, we have exciting undergraduate programs waiting for you!",
-    "technician": "Technicians can continue their education with our specialized programs.",
-    "move": "Thinking about transferring? Learn about our transfer options.",
-    "vocational guidance": "Get vocational guidance to choose the program that best suits your interests.",
-    "admission regulations": "Check out our Admission Regulations to learn more.",
+    "admission": "📞 For information about the admission process, call on +51 982 887 246, or WhatsApp on +51 914 569 313. 💬",
+    "high school": "🎓 If you've finished high school, we have exciting undergraduate programs waiting for you! 🚀",
+    "technician": "🔧 Technicians can continue their education with our specialized programs. 📘",
+    "move": "🚚 Thinking about transferring? Learn about our transfer options. 🔄",
+    "vocational guidance": "🧭 Get vocational guidance to choose the program that best suits your interests. 🌟",
+    "admission regulations": "📜 Check out our Admission Regulations to learn more. 🧐",
 
     // Campus Life
-    "degrees": "We offer various degrees and titles across multiple disciplines.",
-    "ombudsman": "The University Ombudsman's Office ensures fairness and equity for all students.",
-    "wellness": "Our University Wellness program focuses on your mental and physical health.",
-    "library": "Our library is stocked with academic resources to support your studies.",
-    "umacitos nursery": "The Umacitos Nursery is here to support student parents by providing excellent childcare.",
+    "degrees": "🎓 We offer various degrees and titles across multiple disciplines. 📖",
+    "ombudsman": "🛡️ The University Ombudsman's Office ensures fairness and equity for all students. ⚖️",
+    "wellness": "💆‍♂️ Our University Wellness program focuses on your mental and physical health. 🩺",
+    "library": "📚 Our library is stocked with academic resources to support your studies. 📖",
+    "umacitos nursery": "👶 The Umacitos Nursery is here to support student parents by providing excellent childcare. 💕",
 
     // Greetings
-    "hi": "Hello! How can I assist you today?",
-    "hello": "Hi there! What can I help you with?",
-    "how are you": "I'm just a bot, but I'm here to help you!",
-    "thank you": "You're welcome! Let me know if there's anything else I can assist with.",
-    "bye": "Goodbye! Have a great day!"
+    "hi": "👋 Hello! How can I assist you today? 😊",
+    "hello": "👋 Hi there! What can I help you with? 🤗",
+    "how are you": "😊 I'm just a bot, but I'm here to help you! 🤖",
+    "thank you": "🙏 You're welcome! Let me know if there's anything else I can assist with. 🌟",
+    "bye": "👋 Goodbye! Have a great day! 🌈",
+
+    // Contact Information
+    "mail": "📧 For queries, you can mail us at admision@uma.edu.pe. 📬",
+    "location": "📍 The university is located at Canto Bello 431, San Juan de Lurigancho, Lima 15408. 🌍",
+    "address": "📍 You can visit us at Canto Bello 431, San Juan de Lurigancho, Lima 15408. 🏫",
+
+    // Programs Summary
+    "undergraduate": "📚 We offer many undergraduate programs like: 1️⃣ Ingeniería de Inteligencia Artificial, 2️⃣ Administración y Negocios Internacionales, 3️⃣ Administración y Marketing, 4️⃣ Contabilidad y Finanzas, 5️⃣ Farmacia y Bioquímica, 6️⃣ Enfermería, 7️⃣ Nutrición y Dietética, 8️⃣ Psicología, 9️⃣ Tecnología Médica en Laboratorio Clínico y Anatomía Patológica, 🔟 Tecnología Médica en Terapia Física y Rehabilitación. 🎓",
+    "postgraduate": "📘 We offer many postgraduate programs like: 1️⃣ Maestría, 2️⃣ Segunda Especialización Profesional, 3️⃣ Diplomados, 4️⃣ Educación Continua. 🎓"
+
 };
 
 async function loadStudentData() {
