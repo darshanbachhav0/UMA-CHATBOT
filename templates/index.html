@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Service - Universidad Maria Auxiliadora</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/style.css">
+
+    <!-- Fuse.js for Fuzzy Search -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid mt-5">
+        <!-- Logo Section -->
+        <div class="text-center mb-4">
+            <img src="static/images/Logo.png" alt="Logo" class="chatbot-logo">
+        </div>
+
+        <!-- University Title -->
+        <h4 class="mb-4 text-center chatbot-title">Universidad Maria Auxiliadora</h4>
+
+        <div class="main-content d-flex justify-content-center">
+            <!-- Chatbot Container -->
+            <div class="right-content">
+                <div class="card shadow-lg" id="chat-container">
+                    <div class="card-body">
+                        <!-- Chatbot Title -->
+                        <h4 class="mb-4 text-center chatbot-title">Chatea con nosotros</h4>
+                        
+                        <!-- Student Code and Elective Period Inputs with Load Data Button -->
+                        <div class="input-section mb-3">
+                            <label for="student-code">Student Code:</label>
+                            <input type="text" id="student-code" class="form-control" placeholder="Enter your student code">
+                            <label for="elective-period" class="mt-2">Elective Period:</label>
+                            <input type="text" id="elective-period" class="form-control" placeholder="Enter your elective period">
+                            <button id="load-data-button" class="btn btn-primary mt-2" style="background-color: #f02454;">Load Data</button>
+                        </div>
+
+                        <!-- Chatbox where messages appear -->
+                        <div id="chat-box" style="display: none;"></div>
+
+                        <!-- User input and send button -->
+                        <div class="card-footer">
+                            <div class="input-group mb-3">
+                                <input type="text" id="user-input" class="form-control" 
+                                    placeholder="Escribe tu pregunta..." aria-label="User Input" 
+                                    style="border-color: #f02454;">
+                                <button class="btn btn-primary" id="send-button" 
+                                    style="background-color: #f02454;">Enviar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Modal for Appointment Selection (if needed) -->
+        <div id="calendar-popup" class="modal fade" tabindex="-1" aria-labelledby="calendar-popup-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="calendar-popup-label">Seleccionar Fecha de Cita</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="date" id="appointment-date" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="submitAppointment()">Confirmar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and custom JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/script.js"></script>
+</body>
+
+</html>
