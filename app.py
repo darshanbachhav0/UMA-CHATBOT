@@ -124,8 +124,10 @@
 
 from flask import Flask, render_template, jsonify, request
 import requests
+import port
 
 app = Flask(__name__)
+app.run(host="0.0.0.0", port=port, debug=True)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
 
 # Base URL for the external API
