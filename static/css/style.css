@@ -83,6 +83,7 @@ body {
     justify-content: flex-start;
     gap: 5px;
     color: #666666;
+    animation: fade-out 1.5s forwards; /* Ensures animation disappears after 1.5 seconds */
 }
 
 .typing-animation span {
@@ -91,7 +92,7 @@ body {
     height: 8px;
     border-radius: 50%;
     background-color: #666666;
-    animation: typing 1.5s infinite;
+    animation: typing 1.5s infinite; /* Dots animate for 1.5 seconds */
 }
 
 .typing-animation span:nth-child(2) {
@@ -102,6 +103,7 @@ body {
     animation-delay: 0.4s;
 }
 
+/* Keyframes for typing effect */
 @keyframes typing {
     0% {
         opacity: 0.2;
@@ -114,6 +116,17 @@ body {
     100% {
         opacity: 0.2;
         transform: translateY(0px);
+    }
+}
+
+/* Keyframes to fade out typing animation after 1.5 seconds */
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        display: none; /* Hides the typing animation completely */
     }
 }
 
