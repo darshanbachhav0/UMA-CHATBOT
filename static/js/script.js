@@ -1268,7 +1268,7 @@ const keywordResponses = {
     // Greetings
     "hi": "👋 Hello! How can I assist you today? 😊",
     "hello": "👋 Hi there! What can I help you with? 🤗",
-    "how are you": "😊 I'm just a bot, but I'm here to help you! 🤖",
+    "how are you": "😊 I'm just a UMA bot, but I'm here to help you! 🤖",
     "thank you": "🙏 You're welcome! Let me know if there's anything else I can assist with. 🌟",
     "bye": "👋 Goodbye! Have a great day! 🌈",
 
