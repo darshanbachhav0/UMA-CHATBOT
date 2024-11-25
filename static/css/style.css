@@ -83,7 +83,7 @@ body {
     justify-content: flex-start;
     gap: 5px;
     color: #666666;
-    animation: fade-out 1.5s forwards; /* Ensures animation disappears after 1.5 seconds */
+  /*  animation: fade-out 1.5s forwards; /* Ensures animation disappears after 1.5 seconds */
 }
 
 .typing-animation span {
