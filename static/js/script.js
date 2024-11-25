@@ -1355,7 +1355,9 @@ function sendMessage() {
     chatBox.scrollTop = chatBox.scrollHeight;
 
     setTimeout(() => {
-        typingAnimation.remove(); // Remove typing animation
+        setTimeout(() => {
+            typingDiv.remove();
+        }, 1500);
 
         if (Object.keys(studentData).length === 0) {
             // Respond with general keyword-based responses if no data is loaded
