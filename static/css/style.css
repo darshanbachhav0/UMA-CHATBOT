@@ -92,7 +92,7 @@ body {
     height: 8px;
     border-radius: 50%;
     background-color: #666666;
-    animation: typing 1.5s infinite; /* Dots animate for 1.5 seconds */
+    animation: typing 0.75s infinite; /* Dots animate for 1.5 seconds */
 }
 
 .typing-animation span:nth-child(2) {
