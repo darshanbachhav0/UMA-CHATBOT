@@ -35,8 +35,16 @@
                         <div class="input-section mb-3">
                             <label for="student-code">Student Code:</label>
                             <input type="text" id="student-code" class="form-control" placeholder="Enter your student code">
+
                             <label for="elective-period" class="mt-2">Elective Period:</label>
-                            <input type="text" id="elective-period" class="form-control" placeholder="Enter your elective period">
+                            <select id="elective-period" class="form-control">
+                                <option value="" disabled selected>Select Elective Period</option>
+                                <option value="20231">20231</option>
+                                <option value="20232">20232</option>
+                                <option value="20241">20241</option>
+                                <option value="20242">20242</option>
+                            </select>
+
                             <button id="load-data-button" class="btn btn-primary mt-2" style="background-color: #f02454;">Load Data</button>
                         </div>
 
@@ -82,5 +90,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="static/js/script.js"></script>
 </body>
-
 </html>

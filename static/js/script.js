@@ -1219,6 +1219,7 @@ document.getElementById("user-input").addEventListener("keydown", function (even
     if (event.key === "Enter") sendMessage();
 });
 
+
 // Keyword-based responses
 const keywordResponses = {
     "the university": "🏫 Welcome to Universidad Maria Auxiliadora! We strive to provide a quality educational experience to all our students. 🌟",
@@ -1241,6 +1242,7 @@ const keywordResponses = {
     "pharmacy and biochemistry": "⚗️ Discover the science behind health in our Pharmacy and Biochemistry program. 🧪",
     "infirmary": "🩺 Train to be a healthcare professional in our Infirmary program. 💙",
     "nutrition": "🥗 Our Nutrition and Dietetics program focuses on health and well-being. 🏋️",
+    
     "psychology": "🧠 Understand the human mind and behavior in our Psychology program. 💭",
     "medical technology": "🩺 Our Medical Technology programs specialize in clinical laboratory, pathological anatomy, physical therapy, and rehabilitation. 👨‍🔬",
 
@@ -1285,10 +1287,10 @@ const keywordResponses = {
 
 async function loadStudentData() {
     const studentCode = document.getElementById("student-code").value.trim();
-    const electivePeriod = document.getElementById("elective-period").value.trim();
+    const electivePeriod = document.getElementById("elective-period").value;
 
     if (!studentCode || !electivePeriod) {
-        displayMessage("Please enter both Student Code and Elective Period to load data.", "bot-response");
+        displayMessage("Please enter both Student Code and select an Elective Period to load data.", "bot-response");
         return;
     }
 
@@ -1325,8 +1327,6 @@ async function fetchStudentData(dataType, studentCode, electivePeriod) {
         });
 
         const responseData = await response.json();
-        console.log(`Fetched ${dataType}:`, responseData); // Log to inspect the response
-
         if (!response.ok) {
             throw new Error(`Failed to load ${dataType} data - ${responseData.error || "Unknown error"}`);
         }
@@ -1348,25 +1348,21 @@ function sendMessage() {
     const chatBox = document.getElementById("chat-box");
     const typingAnimation = document.createElement("div");
     typingAnimation.className = "message bot-response typing-animation";
-    typingAnimation.innerHTML = `
-        <span>.</span><span>.</span><span>.</span>
-    `;
+    typingAnimation.innerHTML = `<span>.</span><span>.</span><span>.</span>`;
     chatBox.appendChild(typingAnimation);
     chatBox.scrollTop = chatBox.scrollHeight;
 
     setTimeout(() => {
-        typingAnimation.remove(); // Remove typing animation
+        typingAnimation.remove();
 
         if (Object.keys(studentData).length === 0) {
-            // Respond with general keyword-based responses if no data is loaded
             const response = generateKeywordResponse(userInput);
             displayMessage(response, "bot-response");
         } else {
-            // Respond with student data-related responses
             const response = generateResponse(userInput);
             displayMessage(response, "bot-response");
         }
-    }, 3000);
+    }, 1500);
 
     document.getElementById("user-input").value = "";
 }
@@ -1384,17 +1380,12 @@ function generateKeywordResponse(userInput) {
 function generateResponse(userInput) {
     userInput = userInput.toLowerCase();
 
-    if (userInput.includes("attendance")) {
-        return formatAttendanceResponse();
-    } else if (userInput.includes("schedule")) {
-        return formatScheduleResponse();
-    } else if (userInput.includes("grades") || userInput.includes("qualification")) {
-        return formatGradesResponse();
-    } else if (userInput.includes("payments") || userInput.includes("fee")) {
-        return formatPaymentsResponse();
-    } else {
-        return generateKeywordResponse(userInput);
-    }
+    if (userInput.includes("attendance")) return formatAttendanceResponse();
+    if (userInput.includes("schedule")) return formatScheduleResponse();
+    if (userInput.includes("grades")) return formatGradesResponse();
+    if (userInput.includes("payments")) return formatPaymentsResponse();
+
+    return generateKeywordResponse(userInput);
 }
 
 function formatAttendanceResponse() {
@@ -1470,10 +1461,7 @@ function displayMessage(message, className) {
     chatBox.style.display = "block";
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${className}`;
-    
-    // Use innerHTML to support formatted tables
     messageDiv.innerHTML = message;
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-
