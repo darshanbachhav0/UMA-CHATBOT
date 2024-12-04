@@ -6,7 +6,7 @@
 
 # # Base URL for the external API
 # API_BASE_URL = "http://37.60.229.241:8085/service-uma"
-# AUTH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMzcuNjAuMjI5LjI0MTo4MDg1L3NlcnZpY2UtdW1hL2xvZ2luIiwiaWF0IjoxNzMyNDIzOTczLCJleHAiOjE3MzI0Mjc1NzMsIm5iZiI6MTczMjQyMzk3MywianRpIjoiVzJTcXU2TTRIcXNyWlBidSIsInN1YiI6IjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.MOwjkZ-P_UKaTeNEKa6o0RwaOf5TJgx2Z9qzzURYDPw"
+# AUTH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMzcuNjAuMjI5LjI0MTo4MDg1L3NlcnZpY2UtdW1hL2xvZ2luIiwiaWF0IjoxNzMzMjAwOTAwLCJleHAiOjE3MzMyMDQ1MDAsIm5iZiI6MTczMzIwMDkwMCwianRpIjoiYTVvWlJjcVowWmFGVmJIUCIsInN1YiI6IjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.Z4L8BFp96Ppa8ZCS6bHiCXySChlVx3T-kloZQtb9rwg"
 
 # def make_request(endpoint, student_code, elective_period):
 #     url = f"{API_BASE_URL}/{endpoint}"
