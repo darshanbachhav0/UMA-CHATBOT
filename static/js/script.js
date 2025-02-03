@@ -1310,7 +1310,7 @@ async function loadStudentData() {
         displayMessage("Error loading student data. Please try again.", "bot-response");
     }
 }
-
+       
 async function fetchStudentData(dataType, studentCode, electivePeriod) {
     const urlMap = {
         attendance: "/get-attendance",
