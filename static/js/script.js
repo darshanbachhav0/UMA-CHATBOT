@@ -3,7 +3,7 @@ console.log("Script loaded");
 
 // Import Firebase SDK
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
+import { getDatabase, ref, get } from "firebase/database";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -19,53 +19,29 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const database = getDatabase(app);
 
-// Global variable to store user authentication token
+// Global variable to store the latest token
 let userToken = "";
 
-// Function to authenticate user and fetch Firebase token
-async function authenticateUser() {
+// Function to fetch the latest Postman token from Firebase Realtime Database
+async function fetchFirebaseToken() {
     try {
-        // Fetch the Postman token from Firebase Realtime Database
-        const postmanToken = await fetchPostmanTokenFromFirebase();
-
-        if (!postmanToken) {
-            console.error("Failed to retrieve Postman token");
-            return;
+        const tokenRef = ref(database, "my/token"); // Path where token is stored in Firebase
+        const snapshot = await get(tokenRef);
+        if (snapshot.exists()) {
+            userToken = snapshot.val();
+            console.log("✅ Firebase Token Retrieved:", userToken.slice(0, 30) + "..."); // Partial token for security
+            return userToken;
+        } else {
+            console.error("❌ No token found in Firebase.");
+            return null;
         }
-
-        // Sign in with the Postman token in Firebase
-        const userCredential = await signInWithCustomToken(auth, postmanToken);
-        userToken = await userCredential.user.getIdToken();
-        console.log("Authenticated with Firebase, token retrieved.");
     } catch (error) {
-        console.error("Authentication error:", error);
-    }
-}
-
-// Function to retrieve Postman token from Firebase Realtime Database
-async function fetchPostmanTokenFromFirebase() {
-    try {
-        const response = await fetch("https://uma-erp-default-rtdb.firebaseio.com/postmanToken.json");
-        const data = await response.json();
-        return data.token || null;
-    } catch (error) {
-        console.error("Error fetching token:", error);
+        console.error("⚠️ Error fetching token from Firebase:", error);
         return null;
     }
 }
-
-// Wait for user authentication before making API requests
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        userToken = await user.getIdToken();
-        console.log("User authenticated. Token ready for API requests.");
-    } else {
-        console.log("User not authenticated. Trying to authenticate...");
-        await authenticateUser();
-    }
-});
 
 // Global variable to store student data
 let studentData = {};
@@ -77,7 +53,94 @@ document.getElementById("user-input").addEventListener("keydown", function (even
     if (event.key === "Enter") sendMessage();
 });
 
+// Function to fetch data from the Flask backend
+async function fetchData(endpoint, studentCode, electivePeriod) {
+    userToken = await fetchFirebaseToken();  // Always get the latest token before making a request
 
+    if (!userToken) {
+        console.error("⚠️ No valid token available.");
+        return;
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${userToken}`
+            },
+            body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
+        });
+
+        const responseData = await response.json();
+        return responseData;
+    } catch (error) {
+        console.error(`❌ Error fetching ${endpoint}:`, error);
+        return null;
+    }
+}
+
+// Load student data from backend
+async function loadStudentData() {
+    const studentCode = document.getElementById("student-code").value.trim();
+    const electivePeriod = document.getElementById("elective-period").value;
+
+    if (!studentCode || !electivePeriod) {
+        displayMessage("⚠️ Please enter both Student Code and select an Elective Period.", "bot-response");
+        return;
+    }
+
+    await fetchFirebaseToken();  // Ensure the token is updated
+    studentData.attendance = await fetchData("/get-attendance", studentCode, electivePeriod);
+    studentData.schedule = await fetchData("/get-schedule", studentCode, electivePeriod);
+    studentData.grades = await fetchData("/get-grades", studentCode, electivePeriod);
+    studentData.payments = await fetchData("/get-payments", studentCode, electivePeriod);
+
+    displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
+}
+
+// Function to send user messages
+function sendMessage() {
+    const userInput = document.getElementById("user-input").value.trim();
+    if (userInput === "") return;
+
+    displayMessage(userInput, "user-message");
+
+    setTimeout(() => {
+        if (Object.keys(studentData).length === 0) {
+            const response = generateKeywordResponse(userInput);
+            displayMessage(response, "bot-response");
+        } else {
+            const response = generateResponse(userInput);
+            displayMessage(response, "bot-response");
+        }
+    }, 1500);
+
+    document.getElementById("user-input").value = "";
+}
+
+// Generate response based on user input
+function generateResponse(userInput) {
+    userInput = userInput.toLowerCase();
+
+    if (userInput.includes("attendance")) return "📊 You can check your attendance records.";
+    if (userInput.includes("schedule")) return "📅 You can check your class schedule.";
+    if (userInput.includes("grades")) return "📖 You can check your grades.";
+    if (userInput.includes("payments")) return "💰 You can check your payments.";
+
+    return generateKeywordResponse(userInput);
+}
+
+// Function to display messages in chat
+function displayMessage(message, className) {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.style.display = "block";
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${className}`;
+    messageDiv.innerHTML = message;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 // Keyword-based responses
 const keywordResponses = {
@@ -144,82 +207,6 @@ const keywordResponses = {
 
 };
 
-// Function to fetch data from the Flask backend
-async function fetchData(endpoint, studentCode, electivePeriod) {
-    if (!userToken) {
-        console.log("User not authenticated. Authenticating...");
-        await authenticateUser();
-    }
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${userToken}`
-            },
-            body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
-        });
-
-        const responseData = await response.json();
-        return responseData;
-    } catch (error) {
-        console.error(`Error fetching ${endpoint}:`, error);
-        return null;
-    }
-}
-
-// Load student data from backend
-async function loadStudentData() {
-    const studentCode = document.getElementById("student-code").value.trim();
-    const electivePeriod = document.getElementById("elective-period").value;
-
-    if (!studentCode || !electivePeriod) {
-        displayMessage("Please enter both Student Code and select an Elective Period.", "bot-response");
-        return;
-    }
-
-    const attendance = await fetchData("/get-attendance", studentCode, electivePeriod);
-    const schedule = await fetchData("/get-schedule", studentCode, electivePeriod);
-    const grades = await fetchData("/get-grades", studentCode, electivePeriod);
-    const payments = await fetchData("/get-payments", studentCode, electivePeriod);
-
-    studentData = { attendance, schedule, grades, payments };
-    displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
-}
-
-// Function to send user messages
-function sendMessage() {
-    const userInput = document.getElementById("user-input").value.trim();
-    if (userInput === "") return;
-
-    displayMessage(userInput, "user-message");
-
-    setTimeout(() => {
-        if (Object.keys(studentData).length === 0) {
-            const response = generateKeywordResponse(userInput);
-            displayMessage(response, "bot-response");
-        } else {
-            const response = generateResponse(userInput);
-            displayMessage(response, "bot-response");
-        }
-    }, 1500);
-
-    document.getElementById("user-input").value = "";
-}
-
-// Generate response based on user input
-function generateResponse(userInput) {
-    userInput = userInput.toLowerCase();
-
-    if (userInput.includes("attendance")) return "You can check your attendance records.";
-    if (userInput.includes("schedule")) return "You can check your class schedule.";
-    if (userInput.includes("grades")) return "You can check your grades.";
-    if (userInput.includes("payments")) return "You can check your payments.";
-
-    return generateKeywordResponse(userInput);
-}
-
 // Generate a response based on predefined keywords
 function generateKeywordResponse(userInput) {
     const lowerCaseInput = userInput.toLowerCase();
@@ -228,16 +215,5 @@ function generateKeywordResponse(userInput) {
             return keywordResponses[keyword];
         }
     }
-    return "I'm sorry, I couldn't find any information about that. Can you try asking something else?";
-}
-
-// Function to display messages in chat
-function displayMessage(message, className) {
-    const chatBox = document.getElementById("chat-box");
-    chatBox.style.display = "block";
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${className}`;
-    messageDiv.innerHTML = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    return "🤖 I'm sorry, I couldn't find any information about that. Can you try asking something else?";
 }
