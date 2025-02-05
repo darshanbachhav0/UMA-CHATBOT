@@ -1,135 +1,107 @@
-console.log("✅ Script Loaded");
+console.log("Script loaded");
 
-// Import Firebase SDK
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, get } from "firebase/database";
+let studentData = {}; // Variable to store student data
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyDNr5AKYaeuTsWmEMM5zPYZnt1e7BkunHo",
-    authDomain: "uma-erp.firebaseapp.com",
-    databaseURL: "https://uma-erp-default-rtdb.firebaseio.com",
-    projectId: "uma-erp",
-    storageBucket: "uma-erp.appspot.com",
-    messagingSenderId: "325913232044",
-    appId: "1:325913232044:web:d38c9440e65df8dce39509",
-    measurementId: "G-LP9MM0VV1G"
-};
+document.getElementById("load-data-button").addEventListener("click", loadStudentData);
+document.getElementById("send-button").addEventListener("click", sendMessage);
+document.getElementById("user-input").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") sendMessage();
+});
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-
-// Global variable to store the latest token
-let userToken = "";
-
-/**
- * 🔹 Fetch the latest Postman token from Firebase Realtime Database
- */
-async function fetchFirebaseToken() {
-    console.log("🔄 Fetching token from Firebase...");
+// Function to get Firebase Auth Token
+async function getAuthToken() {
     try {
-        const tokenRef = ref(database, "my/token"); // Path where token is stored in Firebase
-        const snapshot = await get(tokenRef);
-        if (snapshot.exists()) {
-            userToken = snapshot.val();
-            console.log("✅ Firebase Token Retrieved:", userToken.slice(0, 30) + "..."); // Partial token for security
-            return userToken;
-        } else {
-            console.error("❌ No token found in Firebase.");
-            return null;
-        }
+        const response = await fetch("/get-auth-token");
+        const data = await response.json();
+        return data.token || null;
     } catch (error) {
-        console.error("⚠️ Error fetching token from Firebase:", error);
+        console.error("Error fetching auth token:", error);
         return null;
     }
 }
 
-// Global variable to store student data
-let studentData = {};
-
-// Ensure the Load Data button exists before adding event listeners
-document.addEventListener("DOMContentLoaded", function () {
-    const loadDataButton = document.getElementById("load-data-button");
-
-    if (loadDataButton) {
-        loadDataButton.addEventListener("click", loadStudentData);
-        console.log("✅ Load Data button event listener attached.");
-    } else {
-        console.error("❌ Load Data button not found in DOM.");
-    }
-});
-
-/**
- * 🔹 Load student data by making API requests to Flask backend
- */
+// Function to load student data
 async function loadStudentData() {
-    console.log("🔄 Load Data button clicked...");
-
     const studentCode = document.getElementById("student-code").value.trim();
     const electivePeriod = document.getElementById("elective-period").value;
 
     if (!studentCode || !electivePeriod) {
-        displayMessage("⚠️ Please enter both Student Code and select an Elective Period.", "bot-response");
+        displayMessage("❗ Please enter both Student Code and select an Elective Period.", "bot-response");
         return;
     }
 
-    console.log(`📨 Fetching data for Student Code: ${studentCode}, Period: ${electivePeriod}`);
-
-    await fetchFirebaseToken();  // Ensure the token is updated
-
-    studentData.attendance = await fetchData("/get-attendance", studentCode, electivePeriod);
-    studentData.schedule = await fetchData("/get-schedule", studentCode, electivePeriod);
-    studentData.grades = await fetchData("/get-grades", studentCode, electivePeriod);
-    studentData.payments = await fetchData("/get-payments", studentCode, electivePeriod);
-
-    displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
-}
-
-/**
- * 🔹 Fetch data from Flask API using Firebase token
- */
-async function fetchData(endpoint, studentCode, electivePeriod) {
-    if (!userToken) {
-        console.log("🔄 Fetching new Firebase token...");
-        await fetchFirebaseToken();
-    }
-
-    if (!userToken) {
-        console.error("⚠️ No valid token available.");
-        return null;
+    const authToken = await getAuthToken();
+    if (!authToken) {
+        displayMessage("❌ Authentication failed. Please try again later.", "bot-response");
+        return;
     }
 
     try {
-        console.log(`📡 Fetching data from ${endpoint}...`);
-        const response = await fetch(endpoint, {
+        // Fetch data from all necessary endpoints
+        const attendance = await fetchStudentData("attendance", studentCode, electivePeriod, authToken);
+        const schedule = await fetchStudentData("schedule", studentCode, electivePeriod, authToken);
+        const grades = await fetchStudentData("grades", studentCode, electivePeriod, authToken);
+        const payments = await fetchStudentData("payments", studentCode, electivePeriod, authToken);
+
+        // Store data for the specific student
+        studentData = { attendance, schedule, grades, payments };
+
+        displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
+    } catch (error) {
+        console.error("Error loading student data:", error);
+        displayMessage("⚠️ Error loading student data. Please try again.", "bot-response");
+    }
+}
+
+// Function to fetch student data from different endpoints
+async function fetchStudentData(dataType, studentCode, electivePeriod, authToken) {
+    const urlMap = {
+        attendance: "/get-attendance",
+        schedule: "/get-schedule",
+        grades: "/get-grades",
+        payments: "/get-payments"
+    };
+
+    try {
+        const response = await fetch(urlMap[dataType], {
             method: "POST",
-            headers: {
+            headers: { 
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${userToken}`
+                "Authorization": `Bearer ${authToken}`
             },
             body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
         });
 
         const responseData = await response.json();
-        console.log(`✅ Data received from ${endpoint}:`, responseData);
-        return responseData;
+        if (!response.ok) {
+            throw new Error(`Failed to load ${dataType} data - ${responseData.error || "Unknown error"}`);
+        }
+
+        return responseData[`${dataType}_data`] || {};
     } catch (error) {
-        console.error(`❌ Error fetching ${endpoint}:`, error);
-        return null;
+        console.error(`Failed to fetch ${dataType}:`, error.message);
+        throw error;
     }
 }
 
-/**
- * 🔹 Function to send user messages
- */
+// Function to handle user message
 function sendMessage() {
     const userInput = document.getElementById("user-input").value.trim();
     if (userInput === "") return;
 
     displayMessage(userInput, "user-message");
 
+    // Show typing animation
+    const chatBox = document.getElementById("chat-box");
+    const typingAnimation = document.createElement("div");
+    typingAnimation.className = "message bot-response typing-animation";
+    typingAnimation.innerHTML = "<span>.</span><span>.</span><span>.</span>";
+    chatBox.appendChild(typingAnimation);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
     setTimeout(() => {
+        typingAnimation.remove();
+
         if (Object.keys(studentData).length === 0) {
             const response = generateKeywordResponse(userInput);
             displayMessage(response, "bot-response");
@@ -142,33 +114,28 @@ function sendMessage() {
     document.getElementById("user-input").value = "";
 }
 
-/**
- * 🔹 Generate response based on user input
- */
+// Function to generate keyword-based response
+function generateKeywordResponse(userInput) {
+    const lowerCaseInput = userInput.toLowerCase();
+    for (const keyword in keywordResponses) {
+        if (lowerCaseInput.includes(keyword)) {
+            return keywordResponses[keyword];
+        }
+    }
+    return "🤖 I'm sorry, I couldn't find any information about that. Can you try asking something else?";
+}
+
+// Function to generate responses based on student data
 function generateResponse(userInput) {
     userInput = userInput.toLowerCase();
 
-    if (userInput.includes("attendance")) return "📊 You can check your attendance records.";
-    if (userInput.includes("schedule")) return "📅 You can check your class schedule.";
-    if (userInput.includes("grades")) return "📖 You can check your grades.";
-    if (userInput.includes("payments")) return "💰 You can check your payments.";
+    if (userInput.includes("attendance")) return formatAttendanceResponse();
+    if (userInput.includes("schedule")) return formatScheduleResponse();
+    if (userInput.includes("grades")) return formatGradesResponse();
+    if (userInput.includes("payments")) return formatPaymentsResponse();
 
     return generateKeywordResponse(userInput);
 }
-
-/**
- * 🔹 Function to display messages in chat
- */
-function displayMessage(message, className) {
-    const chatBox = document.getElementById("chat-box");
-    chatBox.style.display = "block";
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${className}`;
-    messageDiv.innerHTML = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
 
 
 // Keyword-based responses
@@ -242,98 +209,9 @@ const keywordResponses = {
 
 
 
-
-// Function to fetch data from the Flask backend
-async function fetchData(endpoint, studentCode, electivePeriod) {
-    if (!userToken) {
-        console.log("User not authenticated. Authenticating...");
-        await authenticateUser();
-    }
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${userToken}`
-            },
-            body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
-        });
-
-        const responseData = await response.json();
-        return responseData;
-    } catch (error) {
-        console.error(`Error fetching ${endpoint}:`, error);
-        return null;
-    }
-}
-
-// Load student data from backend
-async function loadStudentData() {
-    const studentCode = document.getElementById("student-code").value.trim();
-    const electivePeriod = document.getElementById("elective-period").value;
-
-    if (!studentCode || !electivePeriod) {
-        displayMessage("Please enter both Student Code and select an Elective Period.", "bot-response");
-        return;
-    }
-
-    const attendance = await fetchData("/get-attendance", studentCode, electivePeriod);
-    const schedule = await fetchData("/get-schedule", studentCode, electivePeriod);
-    const grades = await fetchData("/get-grades", studentCode, electivePeriod);
-    const payments = await fetchData("/get-payments", studentCode, electivePeriod);
-
-    studentData = { attendance, schedule, grades, payments };
-    displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
-}
-
-// Function to send user messages
-function sendMessage() {
-    const userInput = document.getElementById("user-input").value.trim();
-    if (userInput === "") return;
-
-    displayMessage(userInput, "user-message");
-
-    setTimeout(() => {
-        if (Object.keys(studentData).length === 0) {
-            const response = generateKeywordResponse(userInput);
-            displayMessage(response, "bot-response");
-        } else {
-            const response = generateResponse(userInput);
-            displayMessage(response, "bot-response");
-        }
-    }, 1500);
-
-    document.getElementById("user-input").value = "";
-}
-
-// Generate response based on user input
-function generateResponse(userInput) {
-    userInput = userInput.toLowerCase();
-
-    if (userInput.includes("attendance")) return "You can check your attendance records.";
-    if (userInput.includes("schedule")) return "You can check your class schedule.";
-    if (userInput.includes("grades")) return "You can check your grades.";
-    if (userInput.includes("payments")) return "You can check your payments.";
-
-    return generateKeywordResponse(userInput);
-}
-
-// Generate a response based on predefined keywords
-function generateKeywordResponse(userInput) {
-    const lowerCaseInput = userInput.toLowerCase();
-    for (const keyword in keywordResponses) {
-        if (lowerCaseInput.includes(keyword)) {
-            return keywordResponses[keyword];
-        }
-    }
-    return "I'm sorry, I couldn't find any information about that. Can you try asking something else?";
-}
-
-// Function to display messages in chat
+// Function to display messages
 function displayMessage(message, className) {
     const chatBox = document.getElementById("chat-box");
-    chatBox.style.display = "block";
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${className}`;
     messageDiv.innerHTML = message;
@@ -341,27 +219,48 @@ function displayMessage(message, className) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function generateKeywordResponse(userInput) {
-    const lowerCaseInput = userInput.toLowerCase();
-    for (const keyword in keywordResponses) {
-        if (lowerCaseInput.includes(keyword)) {
-            return keywordResponses[keyword];
-        }
+// Function to format attendance response
+function formatAttendanceResponse() {
+    if (!studentData.attendance || Object.keys(studentData.attendance).length === 0) {
+        return "❌ No attendance data available.";
     }
-    return "🤖 I'm sorry, I couldn't find any information about that. Can you try asking something else?";
+
+    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Date</th><th>Status</th></tr></thead><tbody>`;
+    for (const [courseCode, courseInfo] of Object.entries(studentData.attendance)) {
+        courseInfo.attendance.forEach(record => {
+            table += `<tr><td>${courseInfo.courseName}</td><td>${record.date}</td><td>${record.state}</td></tr>`;
+        });
+    }
+    table += "</tbody></table>";
+    return table;
+}
+
+// Function to format schedule response
+function formatScheduleResponse() {
+    if (!studentData.schedule || studentData.schedule.length === 0) {
+        return "❌ No schedule data available.";
+    }
+
+    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Modality</th><th>Teacher</th></tr></thead><tbody>`;
+    studentData.schedule.forEach(item => {
+        table += `<tr><td>${item.courseName}</td><td>${item.day}</td><td>${item.hour}</td><td>${item.modality}</td><td>${item.teacherName}</td></tr>`;
+    });
+    table += "</tbody></table>";
+    return table;
+}
+
+// Function to format grades response
+function formatGradesResponse() {
+    if (!studentData.grades || Object.keys(studentData.grades).length === 0) {
+        return "❌ No grades data available.";
+    }
+
+    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Evaluation</th><th>Score</th><th>Status</th></tr></thead><tbody>`;
+    for (const [courseCode, courseInfo] of Object.entries(studentData.grades)) {
+        courseInfo.qualifications.forEach(record => {
+            table += `<tr><td>${courseInfo.courseName}</td><td>${record.evaluationName}</td><td>${record.qualification}</td><td>${record.state}</td></tr>`;
+        });
+    }
+    table += "</tbody></table>";
+    return table;
 }
