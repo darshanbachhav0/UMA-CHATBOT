@@ -6,7 +6,7 @@ from firebase_admin import credentials, auth
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure key
+app.secret_key = 'your_secret_key'
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate("firebase-adminsdk.json")
@@ -35,7 +35,7 @@ def make_request(endpoint, student_code, elective_period):
     
     url = f"{API_BASE_URL}/{endpoint}"
     headers = {
-        "Authorization": f"Bearer {auth_token}",
+        "Authorization": f"Bearer {auth_token}",  # Change to 'JWT' if needed
         "Content-Type": "application/json"
     }
     payload = {
@@ -45,16 +45,9 @@ def make_request(endpoint, student_code, elective_period):
 
     try:
         response = requests.post(url, headers=headers, json=payload)
-        print(f"Request to {url} with payload {payload} returned status {response.status_code}")
-
-        if response.status_code == 200:
-            return response.json(), 200
-        elif response.status_code == 401:
-            return {"error": "Unauthorized access. Please re-authenticate."}, 401
-        elif response.status_code == 404:
-            return {"error": f"No data found for {endpoint} with the given code and period."}, 404
-        else:
-            return {"error": f"Failed to retrieve {endpoint} data"}, response.status_code
+        print(f"Response Status: {response.status_code}")
+        print(f"Response Data: {response.json()}")  # Debug response
+        return response.json(), response.status_code
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return {"error": "An unexpected error occurred."}, 500
@@ -99,6 +92,13 @@ def get_payments():
     elective_period = request.json.get("elective_period")
     data, status_code = make_request("grupoa/payment", student_code, elective_period)
     return jsonify(data), status_code
+
+# Debugging tool: Check Firebase Token
+@app.route("/debug-auth-token", methods=["GET"])
+def debug_auth_token():
+    """Debug Firebase authentication token generation"""
+    token = get_firebase_token()
+    return jsonify({"token": token})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
