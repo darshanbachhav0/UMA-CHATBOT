@@ -1,6 +1,6 @@
 console.log("Script loaded");
 
-let studentData = {}; // Variable to store student data
+let studentData = {}; // Store student data
 
 document.getElementById("load-data-button").addEventListener("click", loadStudentData);
 document.getElementById("send-button").addEventListener("click", sendMessage);
@@ -37,13 +37,11 @@ async function loadStudentData() {
     }
 
     try {
-        // Fetch data from all necessary endpoints
         const attendance = await fetchStudentData("attendance", studentCode, electivePeriod, authToken);
         const schedule = await fetchStudentData("schedule", studentCode, electivePeriod, authToken);
         const grades = await fetchStudentData("grades", studentCode, electivePeriod, authToken);
         const payments = await fetchStudentData("payments", studentCode, electivePeriod, authToken);
 
-        // Store data for the specific student
         studentData = { attendance, schedule, grades, payments };
 
         displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
@@ -82,59 +80,6 @@ async function fetchStudentData(dataType, studentCode, electivePeriod, authToken
         console.error(`Failed to fetch ${dataType}:`, error.message);
         throw error;
     }
-}
-
-// Function to handle user message
-function sendMessage() {
-    const userInput = document.getElementById("user-input").value.trim();
-    if (userInput === "") return;
-
-    displayMessage(userInput, "user-message");
-
-    // Show typing animation
-    const chatBox = document.getElementById("chat-box");
-    const typingAnimation = document.createElement("div");
-    typingAnimation.className = "message bot-response typing-animation";
-    typingAnimation.innerHTML = "<span>.</span><span>.</span><span>.</span>";
-    chatBox.appendChild(typingAnimation);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    setTimeout(() => {
-        typingAnimation.remove();
-
-        if (Object.keys(studentData).length === 0) {
-            const response = generateKeywordResponse(userInput);
-            displayMessage(response, "bot-response");
-        } else {
-            const response = generateResponse(userInput);
-            displayMessage(response, "bot-response");
-        }
-    }, 1500);
-
-    document.getElementById("user-input").value = "";
-}
-
-// Function to generate keyword-based response
-function generateKeywordResponse(userInput) {
-    const lowerCaseInput = userInput.toLowerCase();
-    for (const keyword in keywordResponses) {
-        if (lowerCaseInput.includes(keyword)) {
-            return keywordResponses[keyword];
-        }
-    }
-    return "🤖 I'm sorry, I couldn't find any information about that. Can you try asking something else?";
-}
-
-// Function to generate responses based on student data
-function generateResponse(userInput) {
-    userInput = userInput.toLowerCase();
-
-    if (userInput.includes("attendance")) return formatAttendanceResponse();
-    if (userInput.includes("schedule")) return formatScheduleResponse();
-    if (userInput.includes("grades")) return formatGradesResponse();
-    if (userInput.includes("payments")) return formatPaymentsResponse();
-
-    return generateKeywordResponse(userInput);
 }
 
 
@@ -208,7 +153,6 @@ const keywordResponses = {
 
 
 
-
 // Function to display messages
 function displayMessage(message, className) {
     const chatBox = document.getElementById("chat-box");
@@ -217,50 +161,4 @@ function displayMessage(message, className) {
     messageDiv.innerHTML = message;
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Function to format attendance response
-function formatAttendanceResponse() {
-    if (!studentData.attendance || Object.keys(studentData.attendance).length === 0) {
-        return "❌ No attendance data available.";
-    }
-
-    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Date</th><th>Status</th></tr></thead><tbody>`;
-    for (const [courseCode, courseInfo] of Object.entries(studentData.attendance)) {
-        courseInfo.attendance.forEach(record => {
-            table += `<tr><td>${courseInfo.courseName}</td><td>${record.date}</td><td>${record.state}</td></tr>`;
-        });
-    }
-    table += "</tbody></table>";
-    return table;
-}
-
-// Function to format schedule response
-function formatScheduleResponse() {
-    if (!studentData.schedule || studentData.schedule.length === 0) {
-        return "❌ No schedule data available.";
-    }
-
-    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Modality</th><th>Teacher</th></tr></thead><tbody>`;
-    studentData.schedule.forEach(item => {
-        table += `<tr><td>${item.courseName}</td><td>${item.day}</td><td>${item.hour}</td><td>${item.modality}</td><td>${item.teacherName}</td></tr>`;
-    });
-    table += "</tbody></table>";
-    return table;
-}
-
-// Function to format grades response
-function formatGradesResponse() {
-    if (!studentData.grades || Object.keys(studentData.grades).length === 0) {
-        return "❌ No grades data available.";
-    }
-
-    let table = `<table class="table table-bordered"><thead><tr><th>Course</th><th>Evaluation</th><th>Score</th><th>Status</th></tr></thead><tbody>`;
-    for (const [courseCode, courseInfo] of Object.entries(studentData.grades)) {
-        courseInfo.qualifications.forEach(record => {
-            table += `<tr><td>${courseInfo.courseName}</td><td>${record.evaluationName}</td><td>${record.qualification}</td><td>${record.state}</td></tr>`;
-        });
-    }
-    table += "</tbody></table>";
-    return table;
 }
