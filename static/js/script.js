@@ -243,6 +243,103 @@ const keywordResponses = {
 
 
 
+// Function to fetch data from the Flask backend
+async function fetchData(endpoint, studentCode, electivePeriod) {
+    if (!userToken) {
+        console.log("User not authenticated. Authenticating...");
+        await authenticateUser();
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${userToken}`
+            },
+            body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
+        });
+
+        const responseData = await response.json();
+        return responseData;
+    } catch (error) {
+        console.error(`Error fetching ${endpoint}:`, error);
+        return null;
+    }
+}
+
+// Load student data from backend
+async function loadStudentData() {
+    const studentCode = document.getElementById("student-code").value.trim();
+    const electivePeriod = document.getElementById("elective-period").value;
+
+    if (!studentCode || !electivePeriod) {
+        displayMessage("Please enter both Student Code and select an Elective Period.", "bot-response");
+        return;
+    }
+
+    const attendance = await fetchData("/get-attendance", studentCode, electivePeriod);
+    const schedule = await fetchData("/get-schedule", studentCode, electivePeriod);
+    const grades = await fetchData("/get-grades", studentCode, electivePeriod);
+    const payments = await fetchData("/get-payments", studentCode, electivePeriod);
+
+    studentData = { attendance, schedule, grades, payments };
+    displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
+}
+
+// Function to send user messages
+function sendMessage() {
+    const userInput = document.getElementById("user-input").value.trim();
+    if (userInput === "") return;
+
+    displayMessage(userInput, "user-message");
+
+    setTimeout(() => {
+        if (Object.keys(studentData).length === 0) {
+            const response = generateKeywordResponse(userInput);
+            displayMessage(response, "bot-response");
+        } else {
+            const response = generateResponse(userInput);
+            displayMessage(response, "bot-response");
+        }
+    }, 1500);
+
+    document.getElementById("user-input").value = "";
+}
+
+// Generate response based on user input
+function generateResponse(userInput) {
+    userInput = userInput.toLowerCase();
+
+    if (userInput.includes("attendance")) return "You can check your attendance records.";
+    if (userInput.includes("schedule")) return "You can check your class schedule.";
+    if (userInput.includes("grades")) return "You can check your grades.";
+    if (userInput.includes("payments")) return "You can check your payments.";
+
+    return generateKeywordResponse(userInput);
+}
+
+// Generate a response based on predefined keywords
+function generateKeywordResponse(userInput) {
+    const lowerCaseInput = userInput.toLowerCase();
+    for (const keyword in keywordResponses) {
+        if (lowerCaseInput.includes(keyword)) {
+            return keywordResponses[keyword];
+        }
+    }
+    return "I'm sorry, I couldn't find any information about that. Can you try asking something else?";
+}
+
+// Function to display messages in chat
+function displayMessage(message, className) {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.style.display = "block";
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${className}`;
+    messageDiv.innerHTML = message;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 
 
