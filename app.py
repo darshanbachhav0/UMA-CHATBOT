@@ -2,7 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import requests
 import os
 import firebase_admin
-from firebase_admin import credentials, auth
+from firebase_admin import credentials, db
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -10,29 +10,33 @@ app.secret_key = 'your_secret_key'  # Replace with a secure key
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate("firebase-adminsdk.json")  # Replace with your Firebase Admin SDK JSON file
-firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'  # Replace with your Firebase Realtime Database URL
+})
 
 # Base URL for the external API
 API_BASE_URL = "http://37.60.229.241:8085/service-uma"
 
-def get_firebase_token():
-    """Fetch the latest Postman token from Firebase Authentication."""
+def get_latest_token():
+    """Fetch the latest token from Firebase Realtime Database."""
     try:
-        # Fetch list of users (this assumes the token is stored in a custom claim or database)
-        users = auth.list_users().iterate_all()
-        for user in users:
-            if 'customToken' in user.custom_claims:
-                return user.custom_claims['customToken']
-        return None
+        ref = db.reference("my/token")  # Fetch token from Firebase at path "my/token"
+        token = ref.get()
+        if token:
+            print(f"Fetched latest token: {token[:30]}...")  # Print only part of the token for security
+            return token
+        else:
+            print("No token found in Firebase.")
+            return None
     except Exception as e:
-        print(f"Error fetching Firebase token: {str(e)}")
+        print(f"Error fetching token from Firebase: {str(e)}")
         return None
 
 def make_request(endpoint, student_code, elective_period):
-    """Make a request to the external API with the Firebase token."""
+    """Make a request to the external API using the latest Firebase token."""
     url = f"{API_BASE_URL}/{endpoint}"
-    token = get_firebase_token()
-    
+    token = get_latest_token()  # Fetch the latest token before making the request
+
     if not token:
         return {"error": "Failed to fetch Firebase token"}, 500
 
@@ -47,7 +51,6 @@ def make_request(endpoint, student_code, elective_period):
 
     try:
         response = requests.post(url, headers=headers, json=payload)
-        print(f"Request to {url} with payload {payload} returned status {response.status_code}")
         response_data = response.json()
 
         if response.status_code == 200:
