@@ -2,10 +2,14 @@ console.log("Script loaded");
 
 let studentData = {}; // Variable to store the loaded student data
 
-document.getElementById("load-data-button").addEventListener("click", loadStudentData);
-document.getElementById("send-button").addEventListener("click", sendMessage);
-document.getElementById("user-input").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") sendMessage();
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("📌 Script loaded and DOM ready!");
+
+    document.getElementById("load-data-button").addEventListener("click", loadStudentData);
+    document.getElementById("send-button").addEventListener("click", sendMessage);
+    document.getElementById("user-input").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") sendMessage();
+    });
 });
 
 
@@ -75,15 +79,20 @@ const keywordResponses = {
 };
 
 async function loadStudentData() {
+    console.log("Load Data button clicked!"); // ✅ Debugging Step 1
+
     const studentCode = document.getElementById("student-code").value.trim();
     const electivePeriod = document.getElementById("elective-period").value;
 
     if (!studentCode || !electivePeriod) {
-        displayMessage("Please enter both Student Code and select an Elective Period to load data.", "bot-response");
+        displayMessage("⚠️ Please enter both Student Code and select an Elective Period to load data.", "bot-response");
+        console.log("⚠️ Missing student code or elective period!"); // ✅ Debugging Step 2
         return;
     }
 
     try {
+        console.log("Fetching data for:", studentCode, electivePeriod); // ✅ Debugging Step 3
+
         // Fetch data from all necessary endpoints
         const attendance = await fetchStudentData("attendance", studentCode, electivePeriod);
         const schedule = await fetchStudentData("schedule", studentCode, electivePeriod);
@@ -92,13 +101,16 @@ async function loadStudentData() {
 
         // Store data for the specific student
         studentData = { attendance, schedule, grades, payments };
+        
+        console.log("✅ Data fetched successfully:", studentData); // ✅ Debugging Step 4
+        displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
 
-        displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
     } catch (error) {
-        console.error("Error loading student data:", error);
-        displayMessage("Error loading student data. Please try again.", "bot-response");
+        console.error("❌ Error loading student data:", error); // ✅ Debugging Step 5
+        displayMessage("❌ Error loading student data. Please try again.", "bot-response");
     }
 }
+
        
 async function fetchStudentData(dataType, studentCode, electivePeriod) {
     const urlMap = {
@@ -108,6 +120,8 @@ async function fetchStudentData(dataType, studentCode, electivePeriod) {
         payments: "/get-payments"
     };
 
+    console.log(`📡 Requesting ${dataType} data...`); // ✅ Debugging Step
+
     try {
         const response = await fetch(urlMap[dataType], {
             method: "POST",
@@ -116,16 +130,19 @@ async function fetchStudentData(dataType, studentCode, electivePeriod) {
         });
 
         const responseData = await response.json();
+        console.log(`📩 Response received for ${dataType}:`, responseData); // ✅ Debugging Step
+
         if (!response.ok) {
             throw new Error(`Failed to load ${dataType} data - ${responseData.error || "Unknown error"}`);
         }
 
         return responseData[`${dataType}_data`] || {};
     } catch (error) {
-        console.error(`Failed to fetch ${dataType}: ${error.message}`);
+        console.error(`❌ Failed to fetch ${dataType}:`, error.message);
         throw error;
     }
 }
+
 
 
 function sendMessage() {
@@ -250,10 +267,15 @@ function formatPaymentsResponse() {
 
 function displayMessage(message, className) {
     const chatBox = document.getElementById("chat-box");
-    chatBox.style.display = "block";
+    chatBox.style.display = "block"; // ✅ Ensure chatbox is visible
+
     const messageDiv = document.createElement("div");
-    messageDiv.className = `${className}`; // Fixed incorrect string interpolation
+    messageDiv.className = className; // ✅ Fixed incorrect interpolation
     messageDiv.innerHTML = message;
+
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    console.log(`💬 Displaying message: ${message}`); // ✅ Debugging Step
 }
+
