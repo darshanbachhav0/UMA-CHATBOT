@@ -22,12 +22,12 @@ def get_firebase_token():
         custom_token = auth.create_custom_token("your-service-user")
         return custom_token.decode("utf-8")
     except Exception as e:
-        print(f"Error generating Firebase token: {e}")
+        print(f"❌ Error generating Firebase token: {e}")
         return None
 
 # Function to make API requests with authentication
 def make_request(endpoint, student_code, elective_period):
-    """Makes an authenticated request to the external API."""
+    """Makes an authenticated request to the external API with debugging."""
     auth_token = get_firebase_token()
     
     if not auth_token:
@@ -44,12 +44,22 @@ def make_request(endpoint, student_code, elective_period):
     }
 
     try:
+        print(f"➡️ Sending request to: {url}")
+        print(f"📜 Headers: {headers}")
+        print(f"📦 Payload: {payload}")
+
         response = requests.post(url, headers=headers, json=payload)
-        print(f"Response Status: {response.status_code}")
-        print(f"Response Data: {response.json()}")  # Debug response
+
+        print(f"⬅️ Response Status: {response.status_code}")
+        print(f"⬅️ Response Data: {response.text}")
+
+        # Check for errors in API response
+        if response.status_code != 200:
+            return {"error": f"Failed request to {endpoint}", "details": response.text}, response.status_code
+
         return response.json(), response.status_code
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error in API request: {str(e)}")
         return {"error": "An unexpected error occurred."}, 500
 
 # API Endpoints
@@ -69,6 +79,10 @@ def get_auth_token():
 def get_attendance():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
+    
+    if not student_code or not elective_period:
+        return jsonify({"error": "Missing student_code or elective_period"}), 400
+
     data, status_code = make_request("grupoa/attendance", student_code, elective_period)
     return jsonify(data), status_code
 
@@ -76,6 +90,10 @@ def get_attendance():
 def get_schedule():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
+    
+    if not student_code or not elective_period:
+        return jsonify({"error": "Missing student_code or elective_period"}), 400
+
     data, status_code = make_request("grupoa/course-schedules", student_code, elective_period)
     return jsonify(data), status_code
 
@@ -83,6 +101,10 @@ def get_schedule():
 def get_grades():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
+    
+    if not student_code or not elective_period:
+        return jsonify({"error": "Missing student_code or elective_period"}), 400
+
     data, status_code = make_request("grupoa/course-qualifications", student_code, elective_period)
     return jsonify(data), status_code
 
@@ -90,6 +112,10 @@ def get_grades():
 def get_payments():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
+    
+    if not student_code or not elective_period:
+        return jsonify({"error": "Missing student_code or elective_period"}), 400
+
     data, status_code = make_request("grupoa/payment", student_code, elective_period)
     return jsonify(data), status_code
 
@@ -99,6 +125,16 @@ def debug_auth_token():
     """Debug Firebase authentication token generation"""
     token = get_firebase_token()
     return jsonify({"token": token})
+
+# Debugging tool: Test API manually
+@app.route("/debug-attendance", methods=["GET"])
+def debug_attendance():
+    """Manually test attendance API with test student code"""
+    test_student_code = "test123"
+    test_period = "20241"
+    
+    data, status_code = make_request("grupoa/attendance", test_student_code, test_period)
+    return jsonify(data), status_code
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
