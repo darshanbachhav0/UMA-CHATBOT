@@ -8,38 +8,33 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate("firebase-admin-sdk.json")  # Place your Firebase JSON key file here
+cred = credentials.Certificate("firebase-admin-sdk.json")  # Path to Firebase JSON key file
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'  # Your Firebase Realtime Database URL
 })
 
-# Base URL for the external API
-API_BASE_URL = "http://37.60.229.241:8085/service-uma"
+# Global variable to store the token
+firebase_token = None
 
-def get_firebase_token():
-    """Fetch the latest token from Firebase Realtime Database"""
-    try:
-        ref = db.reference("my/token")  # Adjusted to match the database structure in your screenshot
-        token = ref.get()
-        if token:
-            return token
-        else:
-            print("No token found in Firebase.")
-            return None
-    except Exception as e:
-        print(f"Error fetching token from Firebase: {str(e)}")
-        return None
+def update_firebase_token(event):
+    """Update the global token variable whenever the Firebase token changes."""
+    global firebase_token
+    firebase_token = event.data  # Automatically updates when token changes
+    print(f"Updated Firebase Token: {firebase_token}")
+
+# Attach a listener to Firebase to monitor token changes
+token_ref = db.reference("my/token")  # Adjust based on your Firebase structure
+token_ref.listen(update_firebase_token)
 
 def make_request(endpoint, student_code, elective_period):
     """Make requests to external API using the latest token"""
-    url = f"{API_BASE_URL}/{endpoint}"
-    token = get_firebase_token()  # Fetch the latest token dynamically
-
-    if not token:
+    global firebase_token
+    if not firebase_token:
         return {"error": "Authentication token not available"}, 401
 
+    url = f"http://37.60.229.241:8085/service-uma/{endpoint}"
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {firebase_token}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -49,7 +44,7 @@ def make_request(endpoint, student_code, elective_period):
 
     try:
         response = requests.post(url, headers=headers, json=payload)
-        response_data = response.json()  # Attempt to parse JSON response
+        response_data = response.json()
 
         if response.status_code == 200:
             return response_data, 200
@@ -59,10 +54,9 @@ def make_request(endpoint, student_code, elective_period):
             return {"error": f"No data found for {endpoint} with the given code and period."}, 404
         else:
             return {"error": f"Failed to retrieve {endpoint} data", "details": response_data}, response.status_code
-    except ValueError:
-        return {"error": "Invalid response format from the API"}, 500
     except Exception as e:
-        return {"error": "An unexpected error occurred."}, 500
+        return {"error": "An unexpected error occurred.", "details": str(e)}, 500
+
 # Routes for the Flask app
 @app.route("/")
 def home():
@@ -72,42 +66,29 @@ def home():
 def get_attendance():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
-
     data, status_code = make_request("grupoa/attendance", student_code, elective_period)
-    if status_code == 200:
-        return jsonify({"attendance_data": data.get("data", {})})
-    return jsonify(data), status_code
+    return jsonify({"attendance_data": data.get("data", {})}) if status_code == 200 else jsonify(data), status_code
 
 @app.route("/get-schedule", methods=["POST"])
 def get_schedule():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
-
     data, status_code = make_request("grupoa/course-schedules", student_code, elective_period)
-    if status_code == 200:
-        return jsonify({"schedule_data": data.get("data", [])})
-    return jsonify(data), status_code
+    return jsonify({"schedule_data": data.get("data", [])}) if status_code == 200 else jsonify(data), status_code
 
 @app.route("/get-grades", methods=["POST"])
 def get_grades():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
-
     data, status_code = make_request("grupoa/course-qualifications", student_code, elective_period)
-    if status_code == 200:
-        grades_data = data.get("data", {})
-        return jsonify({"grades_data": grades_data})
-    return jsonify(data), status_code
+    return jsonify({"grades_data": data.get("data", {})}) if status_code == 200 else jsonify(data), status_code
 
 @app.route("/get-payments", methods=["POST"])
 def get_payments():
     student_code = request.json.get("student_code")
     elective_period = request.json.get("elective_period")
-
     data, status_code = make_request("grupoa/payment", student_code, elective_period)
-    if status_code == 200:
-        return jsonify({"payments_data": data.get("data", [])})
-    return jsonify(data), status_code
+    return jsonify({"payments_data": data.get("data", [])}) if status_code == 200 else jsonify(data), status_code
 
 @app.route("/get-response", methods=["POST"])
 def get_response():
@@ -130,8 +111,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable or default to 5000
     app.run(host="0.0.0.0", port=port, debug=True)
 
-
-# Run the Flask app
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable or default to 5000
-    app.run(host="0.0.0.0", port=port, debug=True)
