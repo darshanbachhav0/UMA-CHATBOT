@@ -150,3 +150,19 @@ body {
     #chat-box { height: 300px; }
     .cyber-card { margin: 1rem; }
 }
+
+/* Add loading spinner animation */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error message styling */
+.message.error {
+    background: rgba(240, 36, 84, 0.3);
+    border: 1px solid var(--neon-pink);
+}
