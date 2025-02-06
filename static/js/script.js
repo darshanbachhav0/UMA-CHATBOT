@@ -2,61 +2,57 @@ console.log("Script loaded");
 
 let studentData = {}; // Variable to store the loaded student data
 
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("📌 Script loaded and DOM ready!");
-
-    document.getElementById("load-data-button").addEventListener("click", loadStudentData);
-    document.getElementById("send-button").addEventListener("click", sendMessage);
-    document.getElementById("user-input").addEventListener("keydown", function (event) {
-        if (event.key === "Enter") sendMessage();
-    });
+document.getElementById("load-data-button").addEventListener("click", loadStudentData);
+document.getElementById("send-button").addEventListener("click", sendMessage);
+document.getElementById("user-input").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") sendMessage();
 });
 
 
 // Keyword-based responses
 const keywordResponses = {
-    "about the university": "🏫 Welcome to Universidad Maria Auxiliadora! We strive to provide a quality educational experience to all our students. 🌟For more information visit our website https://uma.edu.pe/",
-    
+    "the university": "🏫 Welcome to Universidad Maria Auxiliadora! We strive to provide a quality educational experience to all our students. 🌟",
+    "quality management": "✅ We are committed to Quality Management in all aspects of our institution. 📋",
     "teachers": "👩‍🏫 Our teachers are experts in their fields and dedicated to your success. 💡",
-   
+    "campuses": "🏢 We have modern campuses with state-of-the-art facilities to support your education. 🌐",
     "social responsibility": "🌍 We actively participate in social responsibility initiatives to support our community. 🤝",
-    
-    "transparency portal": "🔍 Visit our Transparency Portal to explore our initiatives and regulations: For more information visit our website https://uma.edu.pe/. 🌐",
+    "covid": "😷 Our actions against COVID-19 include strict safety protocols and support for the community. 🛡️",
+    "transparency portal": "🔍 Visit our Transparency Portal to explore our initiatives and regulations: [Link]. 🌐",
     "regulations": "📜 You can find our Regulations and Resolutions in the institutional repository. 📘",
     "repository-institutional": "📚 Our Institutional Repository contains a wealth of academic resources for you to explore. 🌟",
-    
+    "i said uma": "🎓 I SAID UMA is our slogan to inspire and motivate our students and staff. 💪",
     "scientific publications": "📖 Explore our scientific publications to stay updated on the latest research. 🔬",
 
     // Undergraduate Programs
     "artificial intelligence": "🤖 Our Artificial Intelligence Engineering program prepares you for the future of technology. 🚀",
-    "business": "🌍 Our International Business and Administration program gives you the tools to thrive in global markets. 📈 For more information visit our website https://uma.edu.pe/",
-    "administration and marketing": "📊 Learn the art of managing and marketing with our Administration and Marketing program. 💼For more information visit our website https://uma.edu.pe/",
-    "accounting and finance": "💰 Our Accounting and Finance program develops your financial expertise. 📊For more information visit our website https://uma.edu.pe/",
-    "pharmacy and biochemistry": "⚗️ Discover the science behind health in our Pharmacy and Biochemistry program. 🧪For more information visit our website https://uma.edu.pe/",
-    "infirmary": "🩺 Train to be a healthcare professional in our Infirmary program. 💙For more information visit our website https://uma.edu.pe/",
-    "nutrition": "🥗 Our Nutrition and Dietetics program focuses on health and well-being. 🏋️For more information visit our website https://uma.edu.pe/",
+    "business": "🌍 Our International Business and Administration program gives you the tools to thrive in global markets. 📈",
+    "administration and marketing": "📊 Learn the art of managing and marketing with our Administration and Marketing program. 💼",
+    "accounting and finance": "💰 Our Accounting and Finance program develops your financial expertise. 📊",
+    "pharmacy and biochemistry": "⚗️ Discover the science behind health in our Pharmacy and Biochemistry program. 🧪",
+    "infirmary": "🩺 Train to be a healthcare professional in our Infirmary program. 💙",
+    "nutrition": "🥗 Our Nutrition and Dietetics program focuses on health and well-being. 🏋️",
     
-    "psychology": "🧠 Understand the human mind and behavior in our Psychology program. 💭For more information visit our website https://uma.edu.pe/",
-    "medical technology": "🩺 Our Medical Technology programs specialize in clinical laboratory, pathological anatomy, physical therapy, and rehabilitation. 👨‍🔬For more information visit our website https://uma.edu.pe/",
+    "psychology": "🧠 Understand the human mind and behavior in our Psychology program. 💭",
+    "medical technology": "🩺 Our Medical Technology programs specialize in clinical laboratory, pathological anatomy, physical therapy, and rehabilitation. 👨‍🔬",
 
     // Graduate Programs
     "mastery": "🎓 Advance your career with our Master's programs. 📘",
     "specialization": "📚 Our Second Specialization Professional programs offer advanced expertise in various fields. 🏆",
-    "graduates": "🎓 We offer extensive support and resources for our graduates. 🎉For more information visit our website https://uma.edu.pe/",
-    
+    "graduates": "🎓 We offer extensive support and resources for our graduates. 🎉",
+    "continuing education": "📖 Our Continuing Education programs are designed to help you grow professionally. 🚀",
 
     // Admission
     "admission": "📞 For information about the admission process, call on +51 982 887 246, or WhatsApp on +51 914 569 313. 💬",
     "high school": "🎓 If you've finished high school, we have exciting undergraduate programs waiting for you! 🚀",
-   
-    
-    "vocational guidance": "🧭 Get vocational guidance to choose the program that best suits your interests. 🌟For more information visit our website https://uma.edu.pe/",
-    "admission regulations": "📜 Check out our Admission Regulations to learn more. 🧐For more information visit our website https://uma.edu.pe/",
+    "technician": "🔧 Technicians can continue their education with our specialized programs. 📘",
+    "move": "🚚 Thinking about transferring? Learn about our transfer options. 🔄",
+    "vocational guidance": "🧭 Get vocational guidance to choose the program that best suits your interests. 🌟",
+    "admission regulations": "📜 Check out our Admission Regulations to learn more. 🧐",
 
     // Campus Life
-    "degrees": "🎓 We offer various degrees and titles across multiple disciplines. 📖For more information visit our website https://uma.edu.pe/",
-   
-   
+    "degrees": "🎓 We offer various degrees and titles across multiple disciplines. 📖",
+    "ombudsman": "🛡️ The University Ombudsman's Office ensures fairness and equity for all students. ⚖️",
+    "wellness": "💆‍♂️ Our University Wellness program focuses on your mental and physical health. 🩺",
     "library": "📚 Our library is stocked with academic resources to support your studies. 📖",
     "umacitos nursery": "👶 The Umacitos Nursery is here to support student parents by providing excellent childcare. 💕",
 
@@ -73,26 +69,21 @@ const keywordResponses = {
     "address": "📍 You can visit us at Canto Bello 431, San Juan de Lurigancho, Lima 15408. 🏫",
 
     // Programs Summary
-    "undergraduate": "📚 We offer many undergraduate programs like: 1️⃣ Ingeniería de Inteligencia Artificial, 2️⃣ Administración y Negocios Internacionales, 3️⃣ Administración y Marketing, 4️⃣ Contabilidad y Finanzas, 5️⃣ Farmacia y Bioquímica, 6️⃣ Enfermería, 7️⃣ Nutrición y Dietética, 8️⃣ Psicología, 9️⃣ Tecnología Médica en Laboratorio Clínico y Anatomía Patológica, 🔟 Tecnología Médica en Terapia Física y Rehabilitación. 🎓For more information visit our website https://uma.edu.pe/",
-    "postgraduate": "📘 We offer many postgraduate programs like: 1️⃣ Maestría, 2️⃣ Segunda Especialización Profesional, 3️⃣ Diplomados, 4️⃣ Educación Continua. 🎓For more information visit our website https://uma.edu.pe/"
+    "undergraduate": "📚 We offer many undergraduate programs like: 1️⃣ Ingeniería de Inteligencia Artificial, 2️⃣ Administración y Negocios Internacionales, 3️⃣ Administración y Marketing, 4️⃣ Contabilidad y Finanzas, 5️⃣ Farmacia y Bioquímica, 6️⃣ Enfermería, 7️⃣ Nutrición y Dietética, 8️⃣ Psicología, 9️⃣ Tecnología Médica en Laboratorio Clínico y Anatomía Patológica, 🔟 Tecnología Médica en Terapia Física y Rehabilitación. 🎓",
+    "postgraduate": "📘 We offer many postgraduate programs like: 1️⃣ Maestría, 2️⃣ Segunda Especialización Profesional, 3️⃣ Diplomados, 4️⃣ Educación Continua. 🎓"
 
 };
 
 async function loadStudentData() {
-    console.log("Load Data button clicked!"); // ✅ Debugging Step 1
-
     const studentCode = document.getElementById("student-code").value.trim();
     const electivePeriod = document.getElementById("elective-period").value;
 
     if (!studentCode || !electivePeriod) {
-        displayMessage("⚠️ Please enter both Student Code and select an Elective Period to load data.", "bot-response");
-        console.log("⚠️ Missing student code or elective period!"); // ✅ Debugging Step 2
+        displayMessage("Please enter both Student Code and select an Elective Period to load data.", "bot-response");
         return;
     }
 
     try {
-        console.log("Fetching data for:", studentCode, electivePeriod); // ✅ Debugging Step 3
-
         // Fetch data from all necessary endpoints
         const attendance = await fetchStudentData("attendance", studentCode, electivePeriod);
         const schedule = await fetchStudentData("schedule", studentCode, electivePeriod);
@@ -101,17 +92,14 @@ async function loadStudentData() {
 
         // Store data for the specific student
         studentData = { attendance, schedule, grades, payments };
-        
-        console.log("✅ Data fetched successfully:", studentData); // ✅ Debugging Step 4
-        displayMessage("✅ Data loaded successfully. You can now ask questions.", "bot-response");
 
+        displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
     } catch (error) {
-        console.error("❌ Error loading student data:", error); // ✅ Debugging Step 5
-        displayMessage("❌ Error loading student data. Please try again.", "bot-response");
+        console.error("Error loading student data:", error);
+        displayMessage("Error loading student data. Please try again.", "bot-response");
     }
 }
 
-       
 async function fetchStudentData(dataType, studentCode, electivePeriod) {
     const urlMap = {
         attendance: "/get-attendance",
@@ -119,8 +107,6 @@ async function fetchStudentData(dataType, studentCode, electivePeriod) {
         grades: "/get-grades",
         payments: "/get-payments"
     };
-
-    console.log(`📡 Requesting ${dataType} data...`); // ✅ Debugging Step
 
     try {
         const response = await fetch(urlMap[dataType], {
@@ -130,20 +116,16 @@ async function fetchStudentData(dataType, studentCode, electivePeriod) {
         });
 
         const responseData = await response.json();
-        console.log(`📩 Response received for ${dataType}:`, responseData); // ✅ Debugging Step
-
         if (!response.ok) {
             throw new Error(`Failed to load ${dataType} data - ${responseData.error || "Unknown error"}`);
         }
 
         return responseData[`${dataType}_data`] || {};
     } catch (error) {
-        console.error(`❌ Failed to fetch ${dataType}:`, error.message);
+        console.error(`Failed to fetch ${dataType}:`, error.message);
         throw error;
     }
 }
-
-
 
 function sendMessage() {
     const userInput = document.getElementById("user-input").value.trim();
@@ -155,7 +137,7 @@ function sendMessage() {
     const chatBox = document.getElementById("chat-box");
     const typingAnimation = document.createElement("div");
     typingAnimation.className = "message bot-response typing-animation";
-    typingAnimation.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+    typingAnimation.innerHTML = `<span>.</span><span>.</span><span>.</span>`;
     chatBox.appendChild(typingAnimation);
     chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -173,7 +155,6 @@ function sendMessage() {
 
     document.getElementById("user-input").value = "";
 }
-
 
 function generateKeywordResponse(userInput) {
     const lowerCaseInput = userInput.toLowerCase();
@@ -206,7 +187,7 @@ function formatAttendanceResponse() {
     
     for (const [courseCode, courseInfo] of Object.entries(studentData.attendance)) {
         courseInfo.attendance.forEach(record => {
-            table += <tr><td>${courseInfo.courseName}</td><td>${record.date}</td><td>${record.state}</td></tr>;
+            table += `<tr><td>${courseInfo.courseName}</td><td>${record.date}</td><td>${record.state}</td></tr>`;
         });
     }
 
@@ -223,7 +204,7 @@ function formatScheduleResponse() {
                     <thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Modality</th><th>Teacher</th></tr></thead><tbody>`;
 
     studentData.schedule.forEach(item => {
-        table += <tr><td>${item.courseName}</td><td>${item.day}</td><td>${item.hour}</td><td>${item.modality}</td><td>${item.teacherName}</td></tr>;
+        table += `<tr><td>${item.courseName}</td><td>${item.day}</td><td>${item.hour}</td><td>${item.modality}</td><td>${item.teacherName}</td></tr>`;
     });
 
     table += `</tbody></table></div>`;
@@ -240,7 +221,7 @@ function formatGradesResponse() {
 
     for (const [courseCode, courseInfo] of Object.entries(studentData.grades)) {
         courseInfo.qualifications.forEach(record => {
-            table += <tr><td>${courseInfo.courseName}</td><td>${record.evaluationName}</td><td>${record.qualification}</td><td>${record.state}</td></tr>;
+            table += `<tr><td>${courseInfo.courseName}</td><td>${record.evaluationName}</td><td>${record.qualification}</td><td>${record.state}</td></tr>`;
         });
     }
 
@@ -257,25 +238,19 @@ function formatPaymentsResponse() {
                     <thead><tr><th>Description</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead><tbody>`;
 
     studentData.payments.forEach(item => {
-        table += <tr><td>${item.paymentDescription}</td><td>${item.fee}</td><td>${item.expirationDate}</td><td>${item.paymentState === 'p' ? 'Paid' : 'Pending'}</td></tr>;
+        table += `<tr><td>${item.paymentDescription}</td><td>${item.fee}</td><td>${item.expirationDate}</td><td>${item.paymentState === 'p' ? 'Paid' : 'Pending'}</td></tr>`;
     });
 
-    table += `</tbody></table></div>`; 
-    
+    table += `</tbody></table></div>`;
     return table;
 }
 
 function displayMessage(message, className) {
     const chatBox = document.getElementById("chat-box");
-    chatBox.style.display = "block"; // ✅ Ensure chatbox is visible
-
+    chatBox.style.display = "block";
     const messageDiv = document.createElement("div");
-    messageDiv.className = className; // ✅ Fixed incorrect interpolation
+    messageDiv.className = `message ${className}`;
     messageDiv.innerHTML = message;
-
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    console.log(`💬 Displaying message: ${message}`); // ✅ Debugging Step
 }
-
