@@ -1,4 +1,3 @@
-
 let studentData = {};
 let recognition = null;
 let isListening = false;
@@ -12,6 +11,100 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+const keywordResponses = { /* keep your existing keyword responses object */ };
+
+function initVoiceRecognition() { /* keep your existing initVoiceRecognition function */ }
+
+async function loadStudentData() {
+    const studentCode = document.getElementById('student-code').value.trim();
+    const period = document.getElementById('elective-period').value;
+    const loadBtn = document.getElementById('load-data');
+
+    if (!studentCode || !period) {
+        displayMessage('Please enter both Student Code and select Period', 'bot-response');
+        return;
+    }
+
+    try {
+        // Show loading state
+        loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        loadBtn.disabled = true;
+
+        // Fetch data sequentially with error handling
+        studentData = {
+            attendance: await fetchData('attendance', studentCode, period),
+            schedule: await fetchData('schedule', studentCode, period),
+            grades: await fetchData('grades', studentCode, period),
+            payments: await fetchData('payments', studentCode, period)
+        };
+
+        document.getElementById('voice-btn').disabled = false;
+        displayMessage('Data loaded successfully! Voice input activated!', 'bot-response');
+    } catch (error) {
+        console.error('Data load error:', error);
+        displayMessage(`Error: ${error.message}`, 'bot-response');
+    } finally {
+        // Reset button state
+        loadBtn.innerHTML = '<i class="fas fa-database me-2"></i>Load Data';
+        loadBtn.disabled = false;
+    }
+}
+
+async function fetchData(endpoint, code, period) {
+    try {
+        const response = await fetch(`/get-${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_code: code, elective_period: period })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to load ${endpoint} data`);
+        }
+
+        return data[`${endpoint}_data`] || [];
+        
+    } catch (error) {
+        throw new Error(`Failed to fetch ${endpoint}: ${error.message}`);
+    }
+}
+
+function sendMessage() { /* keep your existing sendMessage function */ }
+
+function generateResponse(message) {
+    // First check for data-related queries
+    if (Object.keys(studentData).length > 0) {
+        if (message.includes('attendance')) return formatAttendanceResponse();
+        if (message.includes('schedule')) return formatScheduleResponse();
+        if (message.includes('grade')) return formatGradesResponse();
+        if (message.includes('payment')) return formatPaymentsResponse();
+    }
+
+    // Then check keyword responses
+    const lowerMessage = message.toLowerCase();
+    for (const [keyword, response] of Object.entries(keywordResponses)) {
+        if (lowerMessage.includes(keyword.toLowerCase())) {
+            return response;
+        }
+    }
+
+    // Default response
+    return "I'm here to help with university-related queries. Please ask about admissions, programs, or student services.";
+}
+
+// Add this new function to show typing indicator
+function showTypingIndicator() {
+    const chatBox = document.getElementById('chat-box');
+    const typing = document.createElement('div');
+    typing.className = 'message bot-response typing';
+    typing.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    setTimeout(() => typing.remove(), 1000);
+}
 
 
 
@@ -120,73 +213,6 @@ function initVoiceRecognition() {
     }
 }
 
-async function loadStudentData() {
-    const studentCode = document.getElementById('student-code').value.trim();
-    const period = document.getElementById('elective-period').value;
-
-    if (!studentCode || !period) {
-        displayMessage('Please enter both Student Code and select Period', 'bot-response');
-        return;
-    }
-
-    try {
-        const endpoints = ['attendance', 'schedule', 'grades', 'payments'];
-        const responses = await Promise.all(endpoints.map(endpoint => 
-            fetchData(endpoint, studentCode, period)
-        ));
-
-        studentData = Object.fromEntries(endpoints.map((endpoint, i) => 
-            [endpoint, responses[i][`${endpoint}_data`]]
-        ));
-        
-        document.getElementById('voice-btn').disabled = false;
-        displayMessage('Data loaded successfully. Voice input activated!', 'bot-response');
-    } catch (error) {
-        console.error('Data load error:', error);
-        displayMessage('Error loading data. Please try again.', 'bot-response');
-    }
-}
-
-async function fetchData(endpoint, code, period) {
-    const response = await fetch(`/get-${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            student_code: code,
-            elective_period: period
-        })
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-}
-
-function sendMessage() {
-    const input = document.getElementById('user-input');
-    const message = input.value.trim();
-    if (!message) return;
-
-    displayMessage(message, 'user-message');
-    input.value = '';
-
-    showTypingIndicator();
-    setTimeout(() => {
-        const response = generateResponse(message.toLowerCase());
-        displayMessage(response, 'bot-response');
-    }, 1000);
-}
-
-function generateResponse(message) {
-    if (Object.keys(studentData).length === 0) {
-        return getKeywordResponse(message);
-    }
-
-    if (message.includes('attendance')) return formatAttendance();
-    if (message.includes('schedule')) return formatSchedule();
-    if (message.includes('grade')) return formatGrades();
-    if (message.includes('payment')) return formatPayments();
-    
-    return getKeywordResponse(message);
-}
 
 function formatAttendanceResponse() {
     if (!studentData.attendance || Object.keys(studentData.attendance).length === 0) {
