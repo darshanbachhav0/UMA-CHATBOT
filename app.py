@@ -16,6 +16,9 @@ if not firebase_json:
 # Convert the JSON string back into a dictionary
 firebase_config = json.loads(firebase_json)
 
+# Fix private key newlines
+firebase_config["private_key"] = firebase_config["private_key"].replace("\\n", "\n")
+
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred, {
