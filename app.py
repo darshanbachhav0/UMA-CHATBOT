@@ -63,7 +63,7 @@ def make_request(endpoint, student_code, elective_period):
         return {"error": "Invalid response format from the API"}, 500
     except Exception as e:
         return {"error": "An unexpected error occurred."}, 500
-
+# Routes for the Flask app
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -74,6 +74,8 @@ def get_attendance():
     elective_period = request.json.get("elective_period")
 
     data, status_code = make_request("grupoa/attendance", student_code, elective_period)
+    if status_code == 200:
+        return jsonify({"attendance_data": data.get("data", {})})
     return jsonify(data), status_code
 
 @app.route("/get-schedule", methods=["POST"])
@@ -82,6 +84,8 @@ def get_schedule():
     elective_period = request.json.get("elective_period")
 
     data, status_code = make_request("grupoa/course-schedules", student_code, elective_period)
+    if status_code == 200:
+        return jsonify({"schedule_data": data.get("data", [])})
     return jsonify(data), status_code
 
 @app.route("/get-grades", methods=["POST"])
@@ -90,6 +94,9 @@ def get_grades():
     elective_period = request.json.get("elective_period")
 
     data, status_code = make_request("grupoa/course-qualifications", student_code, elective_period)
+    if status_code == 200:
+        grades_data = data.get("data", {})
+        return jsonify({"grades_data": grades_data})
     return jsonify(data), status_code
 
 @app.route("/get-payments", methods=["POST"])
@@ -98,6 +105,8 @@ def get_payments():
     elective_period = request.json.get("elective_period")
 
     data, status_code = make_request("grupoa/payment", student_code, elective_period)
+    if status_code == 200:
+        return jsonify({"payments_data": data.get("data", [])})
     return jsonify(data), status_code
 
 @app.route("/get-response", methods=["POST"])
@@ -116,6 +125,7 @@ def get_response():
 
     return jsonify({"response": response})
 
+# Run the Flask app
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable or default to 5000
     app.run(host="0.0.0.0", port=port, debug=True)
