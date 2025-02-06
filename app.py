@@ -1,29 +1,24 @@
 from flask import Flask, render_template, jsonify, request
 import requests
 import os
-import json
 import firebase_admin
 from firebase_admin import credentials, db
+import json
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure key
+app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key')  # Secure key
 
-# Load Firebase credentials from the environment variable
-firebase_json = os.getenv("FIREBASE_CREDENTIALS")
-if not firebase_json:
-    raise ValueError("Firebase credentials are missing. Set FIREBASE_CREDENTIALS in the environment.")
+# Load Firebase credentials from environment variable
+firebase_config_json = os.environ.get('FIREBASE_CONFIG')  # Get JSON from environment variable
 
-# Convert the JSON string back into a dictionary
-firebase_config = json.loads(firebase_json)
-
-# Fix private key newlines
-firebase_config["private_key"] = firebase_config["private_key"].replace("\\n", "\n")
-
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'  # Your Firebase Realtime Database URL
-})
+if firebase_config_json:
+    firebase_config = json.loads(firebase_config_json)  # Convert JSON string to dictionary
+    cred = credentials.Certificate(firebase_config)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'
+    })
+else:
+    raise ValueError("FIREBASE_CONFIG environment variable is missing!")
 
 # Global variable to store the token
 firebase_token = None
@@ -35,7 +30,7 @@ def update_firebase_token(event):
     print(f"Updated Firebase Token: {firebase_token}")
 
 # Attach a listener to Firebase to monitor token changes
-token_ref = db.reference("my/token")  # Adjust based on your Firebase structure
+token_ref = db.reference("my/token")
 token_ref.listen(update_firebase_token)
 
 def make_request(endpoint, student_code, elective_period):
@@ -69,7 +64,6 @@ def make_request(endpoint, student_code, elective_period):
     except Exception as e:
         return {"error": "An unexpected error occurred.", "details": str(e)}, 500
 
-# Routes for the Flask app
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -118,7 +112,6 @@ def get_response():
 
     return jsonify({"response": response})
 
-# Run the Flask app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable or default to 5000
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
