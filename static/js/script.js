@@ -1,111 +1,12 @@
-let studentData = {};
-let recognition = null;
-let isListening = false;
+console.log("Script loaded");
 
-document.addEventListener('DOMContentLoaded', () => {
-    initVoiceRecognition();
-    document.getElementById('load-data').addEventListener('click', loadStudentData);
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+let studentData = {}; // Variable to store the loaded student data
+
+document.getElementById("load-data-button").addEventListener("click", loadStudentData);
+document.getElementById("send-button").addEventListener("click", sendMessage);
+document.getElementById("user-input").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") sendMessage();
 });
-
-const keywordResponses = { /* keep your existing keyword responses object */ };
-
-function initVoiceRecognition() { /* keep your existing initVoiceRecognition function */ }
-
-async function loadStudentData() {
-    const studentCode = document.getElementById('student-code').value.trim();
-    const period = document.getElementById('elective-period').value;
-    const loadBtn = document.getElementById('load-data');
-
-    if (!studentCode || !period) {
-        displayMessage('Please enter both Student Code and select Period', 'bot-response');
-        return;
-    }
-
-    try {
-        // Show loading state
-        loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-        loadBtn.disabled = true;
-
-        // Fetch data sequentially with error handling
-        studentData = {
-            attendance: await fetchData('attendance', studentCode, period),
-            schedule: await fetchData('schedule', studentCode, period),
-            grades: await fetchData('grades', studentCode, period),
-            payments: await fetchData('payments', studentCode, period)
-        };
-
-        document.getElementById('voice-btn').disabled = false;
-        displayMessage('Data loaded successfully! Voice input activated!', 'bot-response');
-    } catch (error) {
-        console.error('Data load error:', error);
-        displayMessage(`Error: ${error.message}`, 'bot-response');
-    } finally {
-        // Reset button state
-        loadBtn.innerHTML = '<i class="fas fa-database me-2"></i>Load Data';
-        loadBtn.disabled = false;
-    }
-}
-
-async function fetchData(endpoint, code, period) {
-    try {
-        const response = await fetch(`/get-${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ student_code: code, elective_period: period })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || `Failed to load ${endpoint} data`);
-        }
-
-        return data[`${endpoint}_data`] || [];
-        
-    } catch (error) {
-        throw new Error(`Failed to fetch ${endpoint}: ${error.message}`);
-    }
-}
-
-function sendMessage() { /* keep your existing sendMessage function */ }
-
-function generateResponse(message) {
-    // First check for data-related queries
-    if (Object.keys(studentData).length > 0) {
-        if (message.includes('attendance')) return formatAttendanceResponse();
-        if (message.includes('schedule')) return formatScheduleResponse();
-        if (message.includes('grade')) return formatGradesResponse();
-        if (message.includes('payment')) return formatPaymentsResponse();
-    }
-
-    // Then check keyword responses
-    const lowerMessage = message.toLowerCase();
-    for (const [keyword, response] of Object.entries(keywordResponses)) {
-        if (lowerMessage.includes(keyword.toLowerCase())) {
-            return response;
-        }
-    }
-
-    // Default response
-    return "I'm here to help with university-related queries. Please ask about admissions, programs, or student services.";
-}
-
-// Add this new function to show typing indicator
-function showTypingIndicator() {
-    const chatBox = document.getElementById('chat-box');
-    const typing = document.createElement('div');
-    typing.className = 'message bot-response typing';
-    typing.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-    chatBox.appendChild(typing);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    
-    setTimeout(() => typing.remove(), 1000);
-}
-
 
 
 // Keyword-based responses
@@ -173,46 +74,108 @@ const keywordResponses = {
 
 };
 
+async function loadStudentData() {
+    const studentCode = document.getElementById("student-code").value.trim();
+    const electivePeriod = document.getElementById("elective-period").value;
 
+    if (!studentCode || !electivePeriod) {
+        displayMessage("Please enter both Student Code and select an Elective Period to load data.", "bot-response");
+        return;
+    }
 
-function initVoiceRecognition() {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
+    try {
+        // Fetch data from all necessary endpoints
+        const attendance = await fetchStudentData("attendance", studentCode, electivePeriod);
+        const schedule = await fetchStudentData("schedule", studentCode, electivePeriod);
+        const grades = await fetchStudentData("grades", studentCode, electivePeriod);
+        const payments = await fetchStudentData("payments", studentCode, electivePeriod);
 
-        recognition.onstart = () => {
-            isListening = true;
-            document.getElementById('voice-status').classList.remove('d-none');
-            document.getElementById('voice-btn').classList.add('active');
-        };
+        // Store data for the specific student
+        studentData = { attendance, schedule, grades, payments };
 
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('user-input').value = transcript;
-            sendMessage();
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            displayMessage("Sorry, I didn't catch that. Please try again.", 'bot-response');
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            document.getElementById('voice-status').classList.add('d-none');
-            document.getElementById('voice-btn').classList.remove('active');
-        };
-
-        document.getElementById('voice-btn').addEventListener('click', () => {
-            if (!isListening) recognition.start();
-        });
-    } else {
-        document.getElementById('voice-btn').style.display = 'none';
+        displayMessage("Data loaded successfully. You can now ask questions.", "bot-response");
+    } catch (error) {
+        console.error("Error loading student data:", error);
+        displayMessage("Error loading student data. Please try again.", "bot-response");
     }
 }
 
+async function fetchStudentData(dataType, studentCode, electivePeriod) {
+    const urlMap = {
+        attendance: "/get-attendance",
+        schedule: "/get-schedule",
+        grades: "/get-grades",
+        payments: "/get-payments"
+    };
+
+    try {
+        const response = await fetch(urlMap[dataType], {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_code: studentCode, elective_period: electivePeriod })
+        });
+
+        const responseData = await response.json();
+        if (!response.ok) {
+            throw new Error(`Failed to load ${dataType} data - ${responseData.error || "Unknown error"}`);
+        }
+
+        return responseData[`${dataType}_data`] || {};
+    } catch (error) {
+        console.error(`Failed to fetch ${dataType}:`, error.message);
+        throw error;
+    }
+}
+
+function sendMessage() {
+    const userInput = document.getElementById("user-input").value.trim();
+    if (userInput === "") return;
+
+    displayMessage(userInput, "user-message");
+
+    // Show typing animation
+    const chatBox = document.getElementById("chat-box");
+    const typingAnimation = document.createElement("div");
+    typingAnimation.className = "message bot-response typing-animation";
+    typingAnimation.innerHTML = `<span>.</span><span>.</span><span>.</span>`;
+    chatBox.appendChild(typingAnimation);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    setTimeout(() => {
+        typingAnimation.remove();
+
+        if (Object.keys(studentData).length === 0) {
+            const response = generateKeywordResponse(userInput);
+            displayMessage(response, "bot-response");
+        } else {
+            const response = generateResponse(userInput);
+            displayMessage(response, "bot-response");
+        }
+    }, 1500);
+
+    document.getElementById("user-input").value = "";
+}
+
+function generateKeywordResponse(userInput) {
+    const lowerCaseInput = userInput.toLowerCase();
+    for (const keyword in keywordResponses) {
+        if (lowerCaseInput.includes(keyword)) {
+            return keywordResponses[keyword];
+        }
+    }
+    return "I'm sorry, I couldn't find any information about that. Can you try asking something else?";
+}
+
+function generateResponse(userInput) {
+    userInput = userInput.toLowerCase();
+
+    if (userInput.includes("attendance")) return formatAttendanceResponse();
+    if (userInput.includes("schedule")) return formatScheduleResponse();
+    if (userInput.includes("grades")) return formatGradesResponse();
+    if (userInput.includes("payments")) return formatPaymentsResponse();
+
+    return generateKeywordResponse(userInput);
+}
 
 function formatAttendanceResponse() {
     if (!studentData.attendance || Object.keys(studentData.attendance).length === 0) {
@@ -282,11 +245,12 @@ function formatPaymentsResponse() {
     return table;
 }
 
-function displayMessage(content, type) {
-    const chatBox = document.getElementById('chat-box');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.innerHTML = content;
+function displayMessage(message, className) {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.style.display = "block";
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${className}`;
+    messageDiv.innerHTML = message;
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
