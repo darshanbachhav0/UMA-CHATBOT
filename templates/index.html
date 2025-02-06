@@ -3,91 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Service - Universidad Maria Auxiliadora</title>
-
-    <!-- Bootstrap CSS -->
+    <title>NeuraUMA - AI Assistant</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="static/css/style.css">
-
-    <!-- Fuse.js for Fuzzy Search -->
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
-    <div class="container-fluid mt-5">
-        <!-- Logo Section -->
-        <div class="text-center mb-4">
-            <img src="static/images/logo.png" alt="Logo" class="chatbot-logo">
-        </div>
-
-        <!-- University Title -->
-        <h4 class="mb-4 text-center chatbot-title">Universidad Maria Auxiliadora</h4>
-
-        <div class="main-content d-flex justify-content-center">
-            <!-- Chatbot Container -->
-            <div class="right-content">
-                <div class="card shadow-lg" id="chat-container">
-                    <div class="card-body">
-                        <!-- Chatbot Title -->
-                        <h4 class="mb-4 text-center chatbot-title">Chatea con nosotros</h4>
-                        
-                        <!-- Student Code and Elective Period Inputs with Load Data Button -->
-                        <div class="input-section mb-3">
-                            <label for="student-code">Student Code:</label>
-                            <input type="text" id="student-code" class="form-control" placeholder="Enter your student code">
-
-                            <label for="elective-period" class="mt-2">Elective Period:</label>
-                            <select id="elective-period" class="form-control">
-                                <option value="" disabled selected>Select Elective Period</option>
-                                <option value="20231">20231</option>
-                                <option value="20232">20232</option>
-                                <option value="20241">20241</option>
-                                <option value="20242">20242</option>
-                            </select>
-
-                            <button id="load-data-button" class="btn btn-primary mt-2" style="background-color: #f02454;">Load Data</button>
-                        </div>
-
-                        <!-- Chatbox where messages appear -->
-                        <div id="chat-box" style="display: none;"></div>
-
-                        <!-- User input and send button -->
-                        <div class="card-footer">
-                            <div class="input-group mb-3">
-                                <input type="text" id="user-input" class="form-control" 
-                                    placeholder="Escribe tu pregunta..." aria-label="User Input" 
-                                    style="border-color: #f02454;">
-                                <button class="btn btn-primary" id="send-button" 
-                                    style="background-color: #f02454;">Enviar</button>
-                            </div>
-                        </div>
+    <div id="particles-js"></div>
+    
+    <div class="container-fluid min-vh-100 d-flex flex-column justify-content-center">
+        <div class="text-center mb-5 animate__animated animate__fadeInDown">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                 class="hologram-logo floating" 
+                 alt="UMA AI Assistant">
+            <h1 class="neon-title mt-4">UMA AI Assistant</h1>
+            
+            <div class="data-input-section mt-4">
+                <div class="row g-3 justify-content-center">
+                    <div class="col-12 col-md-4">
+                        <input type="text" 
+                               id="student-code" 
+                               class="form-control cyber-input" 
+                               placeholder="Student Code">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <select id="elective-period" class="form-select cyber-input">
+                            <option value="">Select Period</option>
+                            <option value="2023-1">2023 Period 1</option>
+                            <option value="2023-2">2023 Period 2</option>
+                            <option value="2024-1">2024 Period 1</option>
+                            <option value="2024-2">2024 Period 2</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button id="load-data" class="btn btn-neon w-100">
+                            <i class="fas fa-database me-2"></i>Load Data
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Calendar Modal for Appointment Selection (if needed) -->
-        <div id="calendar-popup" class="modal fade" tabindex="-1" aria-labelledby="calendar-popup-label" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="calendar-popup-label">Seleccionar Fecha de Cita</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="date" id="appointment-date" class="form-control">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="submitAppointment()">Confirmar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="cyber-card">
+                    <div id="chat-container">
+                        <div id="chat-box" class="hologram-scroll"></div>
+                        
+                        <div id="voice-status" class="d-none">
+                            <div class="pulse-ring"></div>
+                            <div class="pulse-core"></div>
+                            <span>Listening...</span>
+                        </div>
+
+                        <div class="input-group cyber-input-group">
+                            <button id="voice-btn" class="btn btn-neon" disabled>
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <input type="text" 
+                                   id="user-input"
+                                   class="form-control cyber-input"
+                                   placeholder="Ask me anything...">
+                            <button id="send-btn" class="btn btn-neon">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Include Bootstrap JS and custom JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="static/js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80 },
+                color: { value: '#f02454' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5 },
+                size: { value: 3 },
+                move: { speed: 2 }
+            },
+            interactivity: {
+                events: {
+                    onhover: { enable: true, mode: 'repulse' },
+                    onclick: { enable: true, mode: 'push' }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
