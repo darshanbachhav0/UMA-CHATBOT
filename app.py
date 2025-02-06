@@ -1,14 +1,25 @@
+
+
 from flask import Flask, render_template, jsonify, request
 import requests
 import os
+import json
 import firebase_admin
 from firebase_admin import credentials, db
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
 
+# Load Firebase credentials from the environment variable
+firebase_json = os.getenv("FIREBASE_CREDENTIALS")
+if not firebase_json:
+    raise ValueError("Firebase credentials are missing. Set FIREBASE_CREDENTIALS in the environment.")
+
+# Convert the JSON string back into a dictionary
+firebase_config = json.loads(firebase_json)
+
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate("firebase-admin-sdk.json")  # Path to Firebase JSON key file
+cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'  # Your Firebase Realtime Database URL
 })
@@ -110,4 +121,3 @@ def get_response():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable or default to 5000
     app.run(host="0.0.0.0", port=port, debug=True)
-
