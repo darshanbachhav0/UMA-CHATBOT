@@ -8,15 +8,19 @@ import json
 app = Flask(__name__)
 
 
-# Load Firebase credentials from environment variable
-firebase_config_json = os.environ.get('FIREBASE_CONFIG')  # Get JSON from environment variable
+# Initialize Firebase Admin SDK
+firebase_config_json = os.environ.get('FIREBASE_CONFIG')
 
 if firebase_config_json:
-    firebase_config = json.loads(firebase_config_json)  # Convert JSON string to dictionary
-    cred = credentials.Certificate(firebase_config)
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'
-    })
+    try:
+        firebase_config = json.loads(firebase_config_json)  # Convert JSON string to dictionary
+        cred = credentials.Certificate(firebase_config)
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://uma-erp-default-rtdb.firebaseio.com/'
+        })
+    except Exception as e:
+        print(f"Error loading Firebase credentials: {e}")
+        raise ValueError("Failed to load Firebase credentials.")
 else:
     raise ValueError("FIREBASE_CONFIG environment variable is missing!")
 
@@ -30,7 +34,7 @@ def update_firebase_token(event):
     print(f"Updated Firebase Token: {firebase_token}")
 
 # Attach a listener to Firebase to monitor token changes
-token_ref = db.reference("my/token")
+token_ref = db.reference("my/token")  # Adjust based on your Firebase structure
 token_ref.listen(update_firebase_token)
 
 def make_request(endpoint, student_code, elective_period):
@@ -64,6 +68,7 @@ def make_request(endpoint, student_code, elective_period):
     except Exception as e:
         return {"error": "An unexpected error occurred.", "details": str(e)}, 500
 
+# Routes for the Flask app
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -112,6 +117,7 @@ def get_response():
 
     return jsonify({"response": response})
 
+# Run the Flask app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8080))  # Use PORT from environment variable or default to 5000
+    app.run(host="0.0.0.0", port=port, debug=True)
