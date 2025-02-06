@@ -1,3 +1,5 @@
+
+
 console.log("Script loaded");
 
 let studentData = {}; // Variable to store the loaded student data
