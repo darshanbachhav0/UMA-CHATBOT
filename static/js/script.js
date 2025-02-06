@@ -254,3 +254,121 @@ function displayMessage(message, className) {
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize animated background
+    const doodle = document.querySelector('css-doodle');
+    doodle.innerHTML = `
+        :doodle {
+            @grid: 15x1 / 100vmax;
+            overflow: hidden;
+        }
+        
+        @place-cell: center;
+        @size: calc(@i * 10%);
+        border-radius: 50%;
+        border: 1px solid hsla(calc(20 * @i), 70%, 68%, @r.8);
+        transform: rotate(@r(360deg)) scale(@r(.1, 1.5));
+        animation: rotate @r(20s, 40s) linear infinite;
+        
+        @keyframes rotate {
+            from { transform: rotate(0) }
+            to { transform: rotate(360deg) }
+        }
+    `;
+
+    // Initialize UI elements
+    initChat();
+});
+
+let studentData = {};
+let isProcessing = false;
+
+function initChat() {
+    const sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    
+    sendButton.addEventListener('click', processMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !isProcessing) processMessage();
+    });
+    
+    document.getElementById('load-data-button').addEventListener('click', loadStudentData);
+}
+
+async function processMessage() {
+    if (isProcessing) return;
+    
+    const userInput = document.getElementById('user-input');
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    isProcessing = true;
+    addMessage(message, 'user');
+    userInput.value = '';
+    
+    showTypingIndicator();
+    
+    try {
+        const response = await getBotResponse(message);
+        addMessage(response, 'bot');
+    } catch (error) {
+        addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+    }
+    
+    isProcessing = false;
+}
+
+async function getBotResponse(message) {
+    // Existing response logic here
+    // Add your existing keyword response system
+    // Add API calls as needed
+    
+    // Temporary dummy response
+    return "This is a sample response. Implement your logic here.";
+}
+
+function addMessage(content, sender) {
+    const chatBody = document.getElementById('chat-box');
+    const messageDiv = document.createElement('div');
+    
+    messageDiv.className = `message ${sender}-message`;
+    messageDiv.innerHTML = `
+        <div class="${sender}-avatar">
+            <i class="fas fa-${sender === 'bot' ? 'robot' : 'user'}"></i>
+        </div>
+        <div class="message-content">${content}</div>
+    `;
+    
+    chatBody.appendChild(messageDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const chatBody = document.getElementById('chat-box');
+    const typingDiv = document.createElement('div');
+    
+    typingDiv.className = 'message bot-response typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="bot-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    
+    chatBody.appendChild(typingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Existing data loading and processing functions
+// Add your existing loadStudentData, fetchStudentData, etc. functions here
