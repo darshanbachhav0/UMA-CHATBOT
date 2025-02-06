@@ -6,7 +6,7 @@ from firebase_admin import credentials, db
 import json
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key')  # Secure key
+
 
 # Load Firebase credentials from environment variable
 firebase_config_json = os.environ.get('FIREBASE_CONFIG')  # Get JSON from environment variable
